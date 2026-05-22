@@ -1,0 +1,1 @@
+{"default":{"identifier":"default","description":"W.A.D.E. desktop permissions","local":true,"windows":["main","quickchat"],"permissions":["core:default","shell:allow-spawn","shell:allow-execute","notification:default","global-shortcut:allow-register","global-shortcut:allow-unregister","dialog:allow-message"]}}

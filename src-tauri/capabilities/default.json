@@ -1,0 +1,13 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "W.A.D.E. desktop permissions",
+  "windows": ["main", "quickchat"],
+  "permissions": [
+    "core:default",
+    "notification:default",
+    "global-shortcut:allow-register",
+    "global-shortcut:allow-unregister",
+    "dialog:allow-message"
+  ]
+}

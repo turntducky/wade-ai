@@ -1,0 +1,84 @@
+# --- W.A.D.E. .gitignore ---
+
+# Claude Session Data (CRITICAL: DO NOT COMMIT)
+.claude/
+
+# Brainstorming session files
+.superpowers/
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+.venv/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# Node.js (WhatsApp Bridge)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# W.A.D.E. Data & Models (Local/Heavy Assets)
+data/
+dataset.jsonl
+dataset_v*_elite.jsonl
+hf_models.json
+MODEL_LOCK
+*.onnx
+*.bin
+*.gguf
+
+# Exception: bundled wake-word model (202 KB, safe to commit)
+!app/assets/wade.onnx
+
+# WhatsApp Session & Runtime Data (CRITICAL: DO NOT COMMIT)
+deploy/docker/baileys_auth_info/
+deploy/docker/baileys_lid_map.json
+deploy/docker/baileys_contacts.json
+baileys_auth_info/
+baileys_lid_map.json
+baileys_contacts.json
+
+# Credentials and secrets — never commit these
+blink_credentials.json
+*.credentials.json
+*_credentials.json
+*.env
+.env.*
+!.env.example
+
+# OS Specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+.worktrees/
+
+# Rust / Tauri build artifacts
+src-tauri/target/
+src-tauri/build_output.log
+
+# Legacy local data directory (runtime data belongs in ~/.wade/)
+data/
+
+# Superpowers plugin cache
+.superpowers/

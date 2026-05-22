@@ -1,0 +1,40 @@
+networks:
+  wade-internal:
+    driver: bridge
+
+services:
+  # ---------------------------------------------------------
+  # BRIDGE: Connects WhatsApp to the gateway
+  # ---------------------------------------------------------
+  whatsapp-bridge:
+    build:
+      context: .
+      dockerfile: Dockerfile.whatsapp
+    container_name: wade_whatsapp_bridge
+    volumes:
+      - ~/.wade/wa_session:/app/baileys_auth_info
+    environment:
+      - PYTHON_BASE_URL=http://gateway:8000
+    networks:
+      - wade-internal
+    restart: unless-stopped
+    depends_on:
+      - gateway
+
+  # ---------------------------------------------------------
+  # GATEWAY: Routes messages, holds memory, talks to LLMs
+  # ---------------------------------------------------------
+  gateway:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.gateway
+    container_name: wade_gateway
+    ports:
+      - "8000:8000"
+    volumes:
+      - ~/.wade:/root/.wade
+    env_file:
+      - ../../.env
+    networks:
+      - wade-internal
+    restart: unless-stopped

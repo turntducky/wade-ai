@@ -1,0 +1,10 @@
+# Enable the Sponsor button on the repository.
+# Uncomment and fill in the platforms you use.
+# Full list: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+
+# github: turntducky          # GitHub Sponsors username (requires enrollment)
+# ko_fi: your_ko_fi_username
+# buy_me_a_coffee: your_bmc_username
+# patreon: your_patreon_username
+# open_collective: wade-ai
+custom: ["https://github.com/sponsors/turntducky"]

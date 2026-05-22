@@ -1,0 +1,56 @@
+# ── Web Framework ────────────────────────────────────────────────────────────
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.7.0
+
+# ── Vector DB / Embeddings ───────────────────────────────────────────────────
+chromadb>=1.0.0
+
+# ── HTTP & Networking ────────────────────────────────────────────────────────
+httpx>=0.27.0
+aiohttp>=3.9.0
+requests>=2.31.0
+zeroconf>=0.131.0
+
+# ── Data & Memory ────────────────────────────────────────────────────────────
+numpy>=1.26.0
+pandas>=2.0.0
+PyYAML>=6.0.0
+jsonschema>=4.0.0
+dateparser>=1.1.0
+pycountry>=23.12.11
+
+# ── Math ─────────────────────────────────────────────────────────────────────
+scipy>=1.11.0
+sympy>=1.12.0
+
+# ── Skill Tools ──────────────────────────────────────────────────────────────
+ddgs>=9.0.0
+playwright>=1.40.0
+yfinance>=0.2.0
+APScheduler>=3.10.0
+watchdog>=4.0.0
+mss>=9.0.0
+Pillow>=10.0.0
+notion-client>=2.2.0
+blinkpy>=0.22.0
+spotipy>=2.23.0
+
+# ── Audio / Voice ────────────────────────────────────────────────────────────
+sounddevice>=0.4.6
+openai-whisper>=20230918
+kokoro-onnx>=0.4.0
+openwakeword>=0.6.0
+onnxruntime>=1.17.0
+
+# ── System ───────────────────────────────────────────────────────────────────
+psutil>=6.0.0
+qrcode>=7.4.0
+
+# ── Optional: OpenAI provider fallback ───────────────────────────────────────
+openai>=1.0.0
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+pytest-timeout>=2.3.0
