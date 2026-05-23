@@ -1,0 +1,49 @@
+# W.A.D.E. User Registry
+# -----------------------------------------------------------------------------
+# Edit this file to manage who can talk to W.A.D.E. and at what privilege level.
+# No code changes required — W.A.D.E. reloads this file every 60 seconds.
+#
+# TIERS (highest → lowest privilege)
+# -----------------------------------
+#   admin     - Full access. All tools, all memory, private files.
+#   family    - Trusted family. Full personality, most tools, own memory space.
+#   friends   - Named contacts. Friendly, web/math/search tools, own memory.
+#   guests    - Whitelisted acquaintances. Formal, basic tools, own memory.
+#   strangers - Everyone else. See ~/.wade/tiers/strangers/STRANGER_PERSONA.md
+#               to customize how W.A.D.E. presents to unknown callers.
+#               NOT listed here — strangers is the automatic fallback.
+#
+# PHONE NUMBER FORMAT
+# -------------------
+# Use the full international number without symbols, followed by @s.whatsapp.net
+# Example: (256) 677-8216 -> "2566778216@s.whatsapp.net"
+#
+# HOW TO ADD SOMEONE
+# ------------------
+# Add their JID under the appropriate tier's "whatsapp:" list.
+# To promote someone (e.g. guest → friend), move their line to the higher tier.
+# -----------------------------------------------------------------------------
+
+admin:
+  whatsapp: []
+  # Add your own WhatsApp number here so W.A.D.E. recognises you on mobile:
+  # - "12223334444@s.whatsapp.net" # Your number
+  browser_device_ids: []
+  # Add browser device UUIDs here (from the Users panel → Devices section).
+  # Any device registered here gets full admin access from anywhere on the network.
+  # - "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" # Your phone / laptop
+
+family:
+  whatsapp: []
+  # - "12223334444@s.whatsapp.net" # Partner / close family
+  browser_device_ids: []
+
+friends:
+  whatsapp: []
+  # - "12223334444@s.whatsapp.net" # Friend name
+  browser_device_ids: []
+
+guests:
+  whatsapp: []
+  # - "12223334444@s.whatsapp.net" # Work contact / acquaintance
+  browser_device_ids: []

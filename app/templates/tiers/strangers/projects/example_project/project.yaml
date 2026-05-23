@@ -1,0 +1,52 @@
+# W.A.D.E. Project Definition
+# ─────────────────────────────────────────────────────────────────────────────
+# Each project gives W.A.D.E. knowledge of an external codebase or product
+# so it can help users with questions about it — without ever exposing the code.
+#
+# ROOT  — Optional. Absolute path (or ~ path) to the project on your machine.
+#         All docs: and code: paths below are resolved relative to this root.
+#         If omitted, paths resolve relative to this project.yaml file instead.
+#
+#         Example: root: ~/Desktop/MyApp
+#                  root: C:/Users/yourname/Projects/my-api
+#
+# DOCS  — Markdown/text files W.A.D.E. may freely reference in answers.
+#         Use these for user-facing guides, FAQs, feature descriptions, etc.
+#
+# CODE  — Source files/directories indexed into ChromaDB for semantic search.
+#         W.A.D.E. reads these to understand behavior but NEVER quotes them.
+#         Secret files (.env, *.key, *.pem, id_rsa, *credentials*, etc.) are
+#         automatically excluded — you do not need to list them here.
+#         API keys, tokens, and passwords are redacted before indexing.
+#
+# EXCLUDE — Optional extra paths to skip during code indexing (relative to root).
+#
+# Remove this example and replace with your own project(s).
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: My App
+
+# Point W.A.D.E. at your project wherever it lives on your machine.
+# Supports ~ (home directory) and absolute paths.
+# root: ~/Desktop/MyApp
+
+description: >
+  Replace this with a brief description of what your product or service does.
+  W.A.D.E. uses this when no docs are provided.
+
+docs:
+  # W.A.D.E. may quote these freely in responses — use for guides and FAQs.
+  # - README.md
+  # - docs/user_guide.md
+  # - docs/faq.md
+
+code:
+  # Indexed semantically so W.A.D.E. understands your code — never quoted.
+  # - src/
+  # - lib/specific_module.py
+
+exclude:
+  # Paths to skip beyond the automatic secret-file exclusions.
+  # Useful for generated code, test fixtures, or large vendor trees.
+  # - src/generated/
+  # - tests/fixtures/

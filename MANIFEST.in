@@ -1,0 +1,14 @@
+# Include all bundled static assets and personality templates
+recursive-include app/static *
+recursive-include app/templates *.md
+recursive-include app/templates *.yaml
+recursive-include app/assets *
+
+# Include top-level config/docs
+include README.md
+include LICENSE
+
+# Exclude compiled/cache artifacts
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude *.egg-info

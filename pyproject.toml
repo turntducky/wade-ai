@@ -1,0 +1,146 @@
+[build-system]
+requires = ["setuptools>=70.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# ── Project Metadata ──────────────────────────────────────────────────────────
+[project]
+name = "wade-ai"
+dynamic = ["version"]
+description = "W.A.D.E. — A local, privacy-first AI assistant that runs entirely on your machine."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+keywords = ["ai", "assistant", "llm", "local-ai", "voice", "offline"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+# ── Core Dependencies (always installed) ─────────────────────────────────────
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic>=2.7.0",
+    "httpx>=0.27.0",
+    "aiohttp>=3.9.0",
+    "requests>=2.31.0",
+    "PyYAML>=6.0.0",
+    "psutil>=6.0.0",
+    "numpy>=1.26.0",
+    "scipy>=1.11.0",
+    "sympy>=1.12.0",
+    "pandas>=2.0.0",
+    "jsonschema>=4.0.0",
+    "dateparser>=1.1.0",
+    "pycountry>=23.12.11",
+    "APScheduler>=3.10.0",
+    "watchdog>=4.0.0",
+    "Pillow>=10.0.0",
+    "mss>=9.0.0",
+    "yfinance>=0.2.0",
+    "ddgs>=9.0.0",
+    "notion-client>=2.2.0",
+    "blinkpy>=0.22.0",
+    "spotipy>=2.23.0",
+    "openai>=1.0.0",
+]
+
+# ── Optional Extras ───────────────────────────────────────────────────────────
+[project.optional-dependencies]
+
+# Local LLM inference + vector memory (large downloads)
+llm = [
+    "llama-cpp-python>=0.3.0",
+    "transformers>=4.40.0",
+    "sentence-transformers>=3.0.0",
+    "chromadb>=1.0.0",
+    # GPU build of torch must be installed separately:
+    #   pip install torch --index-url https://download.pytorch.org/whl/cu126
+    "torch>=2.0.0",
+]
+
+# Voice: wake word, speech-to-text, text-to-speech
+voice = [
+    "sounddevice>=0.4.6",
+    "openai-whisper>=20230918",
+    "kokoro-onnx>=0.4.0",
+    "openwakeword>=0.6.0",
+    "onnxruntime>=1.17.0",
+]
+
+# Headless browser automation for web scraping skills
+web = [
+    "playwright>=1.40.0",
+]
+
+# Install everything at once
+all = [
+    "wade-ai[llm,voice,web]",
+]
+
+# Development / CI dependencies
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-timeout>=2.3.0",
+    "httpx>=0.27.0",
+]
+
+# ── Project URLs ─────────────────────────────────────────────────────────────
+[project.urls]
+Homepage = "https://github.com/turntducky/wade-ai"
+Changelog = "https://github.com/turntducky/wade-ai/blob/main/CHANGELOG.md"
+Issues = "https://github.com/turntducky/wade-ai/issues"
+
+# ── CLI Entry Points ──────────────────────────────────────────────────────────
+[project.scripts]
+wade = "app.cli:main"
+
+# ── Version (single source of truth: app/core/version.py) ────────────────────
+[tool.setuptools.dynamic]
+version = {attr = "app.core.version.VERSION"}
+
+# ── Package Discovery ─────────────────────────────────────────────────────────
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app", "app.*"]
+
+# ── Bundled Non-Python Files ──────────────────────────────────────────────────
+# All static assets and templates are anchored under the "app" package key.
+# Sub-package keys (e.g. "app.templates") only work when those directories are
+# themselves Python packages — use "app" with relative glob paths instead.
+[tool.setuptools.package-data]
+"app" = [
+    # Web UI
+    "static/css/*.css",
+    "static/js/*.js",
+    "static/html/*.html",
+    "static/logo/*.svg",
+    "static/logo/*.png",
+    "static/logo/*.ico",
+    # Top-level workspace templates
+    "templates/*.md",
+    "templates/*.yaml",
+    # Tier-specific identity and persona files
+    "templates/tiers/*/*.md",
+    "templates/tiers/*/*.yaml",
+    # Tier project scaffolds (e.g. example_project/project.yaml)
+    "templates/tiers/*/projects/*/*.yaml",
+    "templates/tiers/*/projects/*/*.md",
+    # Bundled binary assets (wake-word model, etc.)
+    "assets/*.onnx",
+    "assets/*.bin",
+    "assets/*.pt",
+]
+
+# ── Testing Configuration ─────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

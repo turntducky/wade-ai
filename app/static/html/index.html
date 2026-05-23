@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>W.A.D.E. — Gateway</title>
+		<link rel="icon" type="image/svg+xml" href="/static/logo/favicon.svg?v=2" sizes="any">
+		<meta name="theme-color" content="#030303">
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+		<link rel="stylesheet" href="static/css/style.css">
+		<script src="https://cdn.tailwindcss.com"></script>
+		<script>
+			tailwind.config = {
+				darkMode: 'class',
+				theme: {
+					extend: {
+						colors: {
+							void: '#030303',
+							surface: '#0a0a0a',
+							raised: '#121212',
+						}
+					}
+				}
+			}
+		</script>
+	</head>
+	<body class="dark text-zinc-300 h-screen flex flex-col overflow-hidden">
+		<div class="top-bar flex items-center justify-between px-6 h-10 shrink-0 z-30">
+			<div class="flex items-center gap-4">
+				<button onclick="document.getElementById('sidebar').classList.toggle('-translate-x-full')" class="md:hidden text-zinc-500 hover:text-white transition-colors">
+					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16" />
+					</svg>
+				</button>
+				<span class="font-display text-[11px] font-bold text-zinc-100 tracking-[0.2em] uppercase">W.A.D.E.</span>
+				<div class="flex items-center gap-2">
+					<span class="w-1.5 h-1.5 rounded-full bg-zinc-300 status-pulse inline-block shrink-0"></span>
+					<span id="status-label" class="font-mono-custom text-[10px] text-zinc-400 tracking-wider">UPLINK_SECURE</span>
+				</div>
+			</div>
+			<div class="flex items-center gap-4">
+				<span id="sys-time" class="font-mono-custom text-[10px] text-zinc-500 tracking-wider tabular-nums"></span>
+				<button id="god-mode-btn" onclick="toggleGodMode()" title="God Mode" class="flex items-center justify-center w-6 h-6 text-zinc-500 hover:text-[#00ff66] transition-colors">
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<circle cx="12" cy="12" r="3" stroke-width="1.5" />
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6.3 6.3a8 8 0 000 11.4M17.7 6.3a8 8 0 010 11.4" />
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.5 3.5a14 14 0 000 17M20.5 3.5a14 14 0 010 17" />
+					</svg>
+				</button>
+				<button onclick="showQRModal()" title="Connect on Mobile" class="flex items-center justify-center w-6 h-6 text-zinc-500 hover:text-white transition-colors">
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+					</svg>
+				</button>
+				<span id="version-tag" class="sys-tag text-[9px]">v0.1.0-beta</span>
+			</div>
+		</div>
+		<div class="flex flex-1 overflow-hidden">
+			<nav id="sidebar" class="fixed inset-y-0 left-0 z-[40] w-16 h-screen md:h-auto flex flex-col items-center justify-start pt-2 pb-4 md:py-4 bg-surface/95 backdrop-blur-xl border-r border-white/10 transition-all duration-300 ease-in-out -translate-x-full md:relative md:translate-x-0 md:items-stretch md:bg-transparent md:border-white/5 flex-shrink-0 md:w-16">
+				<div class="md:hidden flex items-center justify-between w-full px-2 mb-3 shrink-0 h-10 border-b border-white/5">
+					<button onclick="document.getElementById('sidebar').classList.add('-translate-x-full')" class="flex items-center justify-center w-8 h-8 text-zinc-500 hover:text-white transition-colors rounded-lg hover:bg-white/5">
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+						</svg>
+					</button>
+				</div>
+				<div class="hidden md:flex items-center justify-start w-full px-2 mb-6 shrink-0 h-10 relative">
+					<div id="logo-icon" class="absolute left-14 flex items-center gap-3 opacity-0 scale-50 transition-all duration-300 pointer-events-none whitespace-nowrap">
+						<div class="w-1.5 h-1.5 rounded-full bg-[#00ff66] shadow-[0_0_8px_rgba(0,255,102,0.4)]"></div>
+						<span class="font-display text-[12px] font-bold text-white tracking-[0.2em] uppercase mt-0.5">W.A.D.E.</span>
+					</div>
+					<button id="sidebar-toggle" onclick="toggleSidebar()" class="flex items-center justify-center w-12 h-10 text-zinc-500 hover:text-white transition-colors rounded-lg z-20 shrink-0">
+						<div class="flex items-center justify-center w-6 h-6 shrink-0">
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16" />
+							</svg>
+						</div>
+					</button>
+				</div>
+				<div class="flex flex-col w-full gap-2 px-2">
+					<button onclick="switchTab('chat')" id="nav-chat" class="has-tooltip nav-btn relative flex items-center justify-start p-2 flex-1 h-12 text-zinc-500 nav-btn-active">
+						<span class="nav-active-edge"></span>
+						<div class="flex items-center justify-center w-6 h-6 shrink-0">
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+							</svg>
+						</div>
+						<span class="nav-text hidden opacity-0 transition-opacity duration-300 absolute left-10 top-1/2 -translate-y-1/2 font-display font-bold text-[10px] tracking-wider whitespace-nowrap">CHAT</span>
+						<span class="tooltip-text hidden md:block">Chat</span>
+					</button>
+					<button onclick="switchTab('tasks')" id="nav-tasks" class="has-tooltip nav-btn relative flex items-center justify-start p-2 flex-1 h-12 text-zinc-500">
+						<span class="nav-active-edge"></span>
+						<div class="flex items-center justify-center w-6 h-6 shrink-0">
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+							</svg>
+						</div>
+						<span class="nav-text hidden opacity-0 transition-opacity duration-300 absolute left-10 top-1/2 -translate-y-1/2 font-display font-bold text-[10px] tracking-wider whitespace-nowrap">TASKS</span>
+						<span class="tooltip-text hidden md:block">Tasks</span>
+					</button>
+					<button id="nav-memory" onclick="switchTab('memory')" class="has-tooltip nav-btn relative flex items-center justify-start p-2 flex-1 h-12 text-zinc-500">
+						<span class="nav-active-edge"></span>
+						<div class="flex items-center justify-center w-6 h-6 shrink-0">
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2v-4M9 21H5a2 2 0 01-2-2v-4m0 0h18" />
+							</svg>
+						</div>
+						<span class="nav-text hidden opacity-0 transition-opacity duration-300 absolute left-10 top-1/2 -translate-y-1/2 font-display font-bold text-[10px] tracking-wider whitespace-nowrap">MEMORY</span>
+						<span class="tooltip-text hidden md:block">Memory</span>
+					</button>
+				</div>
+				<div class="w-full h-[1px] bg-white/10 my-1 mx-auto rounded-full px-2"></div>
+				<div class="flex flex-col w-full gap-2 px-2">
+					<button onclick="switchTab('recon')" id="nav-recon" class="has-tooltip nav-btn relative flex items-center justify-start p-2 flex-1 h-12 text-zinc-500">
+						<span class="nav-active-edge"></span>
+						<div class="flex items-center justify-center w-6 h-6 shrink-0">
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253M3.157 7.582A8.959 8.959 0 003 12c0 .778.099 1.533.284 2.253" />
+							</svg>
+						</div>
+						<span class="nav-text hidden opacity-0 transition-opacity duration-300 absolute left-10 top-1/2 -translate-y-1/2 font-display font-bold text-[10px] tracking-wider whitespace-nowrap">RECON</span>
+						<span class="tooltip-text hidden md:block">Global Recon</span>
+					</button>
+					<button onclick="switchTab('security')" id="nav-security" class="has-tooltip nav-btn relative flex items-center justify-start p-2 flex-1 h-12 text-zinc-500">
+						<span class="nav-active-edge"></span>
+						<div class="flex items-center justify-center w-6 h-6 shrink-0">
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.955 11.955 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.249-8.25-3.285z" />
+							</svg>
+						</div>
+						<span class="nav-text hidden opacity-0 transition-opacity duration-300 absolute left-10 top-1/2 -translate-y-1/2 font-display font-bold text-[10px] tracking-wider whitespace-nowrap">SECURITY</span>
+						<span class="tooltip-text hidden md:block">Security</span>
+					</button>
+					<button onclick="switchTab('aero')" id="nav-aero" class="has-tooltip nav-btn relative flex items-center justify-start p-2 flex-1 h-12 text-zinc-500">
+						<span class="nav-active-edge"></span>
+						<div class="flex items-center justify-center w-6 h-6 shrink-0">
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+							</svg>
+						</div>
+						<span class="nav-text hidden opacity-0 transition-opacity duration-300 absolute left-10 top-1/2 -translate-y-1/2 font-display font-bold text-[10px] tracking-wider whitespace-nowrap">AERO-FLOW</span>
+						<span class="tooltip-text hidden md:block">Aero-Flow</span>
+					</button>
+					<button onclick="switchTab('monitors')" id="nav-monitors" class="has-tooltip nav-btn relative flex items-center justify-start p-2 flex-1h-14 md:h-12 text-zinc-500">
+						<span class="nav-active-edge"></span>
+						<div class="flex items-center justify-center w-6 h-6 shrink-0">
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+							</svg>
+						</div>
+						<span class="nav-text hidden opacity-0 transition-opacity duration-300 absolute left-10 top-1/2 -translate-y-1/2 font-display font-bold text-[10px] tracking-wider whitespace-nowrap">MONITORS</span>
+						<span class="tooltip-text hidden md:block">Monitors</span>
+					</button>
+					<button onclick="switchTab('users')" id="nav-users" class="has-tooltip nav-btn relative flex items-center justify-start p-2 flex-1 h-12 text-zinc-500">
+						<span class="nav-active-edge"></span>
+						<div class="flex items-center justify-center w-6 h-6 shrink-0">
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+							</svg>
+						</div>
+						<span class="nav-text hidden opacity-0 transition-opacity duration-300 absolute left-10 top-1/2 -translate-y-1/2 font-display font-bold text-[10px] tracking-wider whitespace-nowrap">USERS</span>
+						<span class="tooltip-text hidden md:block">Users</span>
+					</button>
+				</div>
+				<div class="hidden md:block flex-1"></div>
+				<div class="flex flex-col w-full gap-2 px-2 mt-auto pb-3">
+					<button onclick="switchTab('credentials')" id="nav-credentials" class="has-tooltip nav-btn relative flex items-center justify-start p-2 flex-1 h-12 text-zinc-500">
+						<span class="nav-active-edge"></span>
+						<div class="flex items-center justify-center w-6 h-6 shrink-0">
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+							</svg>
+						</div>
+						<span class="nav-text hidden opacity-0 transition-opacity duration-300 absolute left-10 top-1/2 -translate-y-1/2 font-display font-bold text-[10px] tracking-wider whitespace-nowrap">CREDENTIALS</span>
+						<span class="tooltip-text hidden md:block">Credentials</span>
+					</button>
+					<button onclick="switchTab('settings')" id="nav-settings" class="has-tooltip nav-btn relative flex items-center justify-start p-2 flex-1 h-12 text-zinc-500">
+						<span class="nav-active-edge"></span>
+						<div class="flex items-center justify-center w-6 h-6 shrink-0">
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+							</svg>
+						</div>
+						<span class="nav-text hidden opacity-0 transition-opacity duration-300 absolute left-10 top-1/2 -translate-y-1/2 font-display font-bold text-[10px] tracking-wider whitespace-nowrap">SETTINGS</span>
+						<span class="tooltip-text hidden md:block">Settings</span>
+					</button>
+					<div class="w-full h-[1px] bg-white/10 my-1 mx-auto rounded-full"></div>
+					<div class="has-tooltip nav-btn relative flex items-center justify-start w-full p-2 h-12 text-zinc-500 cursor-pointer transition-colors">
+						<div class="w-7 h-7 rounded-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center border border-white/10 shrink-0 shadow-inner">
+							<span id="user-initial" class="font-display font-bold text-[11px] text-zinc-200">U</span>
+						</div>
+						<div class="nav-text hidden opacity-0 transition-opacity duration-300 absolute left-11 top-1/2 -translate-y-1/2 flex flex-col items-start">
+							<span id="user-name-label" class="font-mono-custom text-[11px] font-medium text-zinc-300 truncate w-full text-left">User</span>
+							<span class="font-mono-custom text-[9px] text-[#00ff66]/80 truncate uppercase tracking-widest mt-0.5">Admin</span>
+						</div>
+						<span id="user-name-tooltip" class="tooltip-text hidden md:block">User</span>
+					</div>
+				</div>
+			</nav>
+			<main class="flex-1 flex relative h-full overflow-hidden bg-void">
+				<aside id="context-drawer" class="absolute left-0 top-0 h-full w-full sm:w-72 transform -translate-x-full transition-transform duration-400 ease-in-out z-40 flex flex-col bg-surface border-r border-white/5 shadow-2xl">
+					<div class="flex items-center justify-between px-6 py-5 border-b border-white/5 bg-white/[0.01] shrink-0">
+						<div class="flex items-center gap-3">
+							<div class="w-1.5 h-1.5 rounded-full bg-[#00ff66] animate-pulse shadow-[0_0_8px_rgba(0,255,102,0.4)]"></div>
+							<span class="font-display text-[12px] font-bold text-white tracking-[0.15em] uppercase">Context Matrix</span>
+						</div>
+						<button onclick="toggleContext()" class="text-zinc-500 hover:text-white transition-colors p-1.5 rounded-md hover:bg-white/5">
+							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+							</svg>
+						</button>
+					</div>
+					<div class="flex-1 overflow-y-auto p-5 space-y-7">
+						<div>
+							<p class="section-header mb-3 flex items-center gap-2 text-zinc-500">
+								<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+								</svg> Personality Cores
+							</p>
+							<div class="space-y-3">
+								<div class="module-card p-4 cursor-pointer group hover:border-[#00ff66]/30 hover:shadow-[0_0_15px_rgba(0,255,102,0.05)] transition-all">
+									<div class="flex items-start justify-between mb-2.5">
+										<div class="flex items-center gap-2.5">
+											<svg class="w-4 h-4 text-zinc-500 group-hover:text-[#00ff66] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+											</svg>
+											<span class="font-mono-custom text-[11px] font-medium text-zinc-300 group-hover:text-white transition-colors">SOUL.md</span>
+										</div>
+										<span class="sys-tag border-[#00ff66]/20 text-[#00ff66] bg-[#00ff66]/5">ACTIVE</span>
+									</div>
+									<p class="text-[11px] text-zinc-500 font-light leading-relaxed group-hover:text-zinc-400 transition-colors">Core personality matrix and behavioral directives.</p>
+								</div>
+								<div class="module-card p-4 cursor-pointer group hover:border-[#00ff66]/30 hover:shadow-[0_0_15px_rgba(0,255,102,0.05)] transition-all">
+									<div class="flex items-start justify-between mb-2.5">
+										<div class="flex items-center gap-2.5">
+											<svg class="w-4 h-4 text-zinc-500 group-hover:text-[#00ff66] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+											</svg>
+											<span class="font-mono-custom text-[11px] font-medium text-zinc-300 group-hover:text-white transition-colors">IDENTITY.md</span>
+										</div>
+										<span class="sys-tag border-[#00ff66]/20 text-[#00ff66] bg-[#00ff66]/5">ACTIVE</span>
+									</div>
+									<p class="text-[11px] text-zinc-500 font-light leading-relaxed group-hover:text-zinc-400 transition-colors">System tone, identity, and foundational parameters.</p>
+								</div>
+							</div>
+						</div>
+						<div>
+							<p class="section-header mb-3 flex items-center gap-2 text-zinc-500">
+								<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+								</svg> Agent Protocols
+							</p>
+							<div class="space-y-3">
+								<div class="module-card p-4 cursor-pointer group hover:border-zinc-500/50 transition-all opacity-70 hover:opacity-100">
+									<div class="flex items-start justify-between mb-2.5">
+										<div class="flex items-center gap-2.5">
+											<svg class="w-4 h-4 text-zinc-600 group-hover:text-zinc-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+											</svg>
+											<span class="font-mono-custom text-[11px] font-medium text-zinc-400 group-hover:text-zinc-200 transition-colors">AGENTS.md</span>
+										</div>
+										<span class="sys-tag border-zinc-700 text-zinc-500 bg-transparent">STANDBY</span>
+									</div>
+									<p class="text-[11px] text-zinc-600 font-light leading-relaxed group-hover:text-zinc-400 transition-colors">Multi-agent routing and orchestration logic.</p>
+								</div>
+							</div>
+						</div>
+						<div class="flex-1"></div>
+						<div class="pt-4 border-t border-white/5 pb-2">
+							<div class="flex items-center justify-between text-zinc-500 mb-2.5">
+								<span class="font-mono-custom text-[9px] tracking-widest uppercase font-bold">Context Payload</span>
+								<span class="font-mono-custom text-[10px] text-zinc-400">18.4 KB</span>
+							</div>
+							<div class="h-1 w-full bg-black/40 rounded-full overflow-hidden shadow-inner">
+								<div class="h-full bg-zinc-600 rounded-full" style="width: 22%"></div>
+							</div>
+						</div>
+					</div>
+				</aside>
+				<section id="center-column" class="flex-1 flex flex-col h-full transition-all duration-400 ease-in-out z-10 w-full relative">
+					<header id="chat-header" class="header-bar h-14 flex items-center justify-between px-6 shrink-0">
+						<div class="flex items-center gap-3">
+							<button onclick="toggleContext()" class="btn-ghost flex items-center gap-2 h-8 px-4 text-sm">
+								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h8m-8 6h16" />
+								</svg>
+								<span class="text-[12px] font-medium hidden sm:inline">Context</span>
+							</button>
+							<div class="flex items-center gap-2 h-8 px-3 rounded-full border border-white/5 bg-white/[0.02]">
+								<span class="w-1.5 h-1.5 rounded-full bg-zinc-300 status-pulse shrink-0"></span>
+								<span class="font-mono-custom text-[10px] text-zinc-400 tracking-wider">LLM GATEWAY</span>
+							</div>
+						</div>
+						<div class="flex items-center gap-3">
+							<div id="streaming-indicator" class="hidden items-center gap-2 h-8 px-4 rounded-full bg-white/[0.03] border border-white/5">
+								<span class="flex h-2 w-2 relative">
+									<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+									<span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+								</span>
+								<span class="font-mono-custom text-[10px] text-zinc-300 tracking-wider">Processing</span>
+							</div>
+							<button onclick="clearMemory()" class="btn-ghost flex items-center gap-2 h-8 px-4 text-sm">
+								<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+								</svg>
+								<span class="text-[12px] font-medium hidden sm:inline">Clear</span>
+							</button>
+						</div>
+					</header>
+					<div id="tab-chat" class="tab-content active flex-col flex-1 overflow-hidden w-full relative">
+						<div id="chat-box" class="flex-1 overflow-y-auto px-6 sm:px-12 pb-4 w-full max-w-4xl mx-auto flex flex-col pt-8">
+							<div id="welcome-screen" class="flex flex-col items-center justify-center mt-10 sm:mt-16 mb-10 w-full">
+								<div class="relative flex items-center justify-center mb-8">
+									<div class="welcome-glow"></div>
+									<div class="avatar-chrome-wrap">
+										<div class="rounded-full flex items-center justify-center w-full h-full">
+											<span class="font-display font-extrabold text-3xl">W</span>
+										</div>
+									</div>
+								</div>
+								<div class="text-center mb-10">
+									<h1 class="font-display font-extrabold text-2xl sm:text-3xl tracking-[0.15em] text-white uppercase mb-3">W.A.D.E.</h1>
+									<p class="font-sans text-[13px] text-zinc-500 tracking-[0.05em] font-light">Adaptive Digital Entity — Online</p>
+								</div>
+								<div id="boot-log" class="min-h-[4rem] space-y-1.5 w-full max-w-md text-center opacity-80 mb-8"></div>
+							</div>
+						</div>
+						<div class="w-full px-6 sm:px-8 pb-8 pt-4 shrink-0">
+							<div class="w-full max-w-3xl mx-auto">
+								<div id="example-cards" class="mb-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
+									<div onclick="usePrompt('Run system diagnostics and check hardware health')" class="module-card p-4 cursor-pointer group">
+										<p class="text-[12px] font-medium text-zinc-400 group-hover:text-white leading-relaxed transition-colors">Run system diagnostics</p>
+									</div>
+									<div onclick="usePrompt('Search the web for the latest AI news and summarise the top stories')" class="module-card p-4 cursor-pointer group">
+										<p class="text-[12px] font-medium text-zinc-400 group-hover:text-white leading-relaxed transition-colors">Search the web for...</p>
+									</div>
+									<div onclick="usePrompt('Explore my workspace and list recent files')" class="module-card p-4 cursor-pointer group hidden sm:block">
+										<p class="text-[12px] font-medium text-zinc-400 group-hover:text-white leading-relaxed transition-colors">Explore my workspace</p>
+									</div>
+									<div onclick="usePrompt('Check market data and summarise current prices for AAPL and BTC')" class="module-card p-4 cursor-pointer group hidden lg:block">
+										<p class="text-[12px] font-medium text-zinc-400 group-hover:text-white leading-relaxed transition-colors">Check market data</p>
+									</div>
+								</div>
+								<div id="system-status" class="hidden mb-3 px-4 py-2 bg-white/[0.02] border border-white/5 rounded-lg flex items-center gap-3 anim-fade-up">
+									<div class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></div>
+									<span id="system-status-text" class="font-mono text-[10px] text-zinc-400 uppercase tracking-widest">Initializing...</span>
+								</div>
+								<div class="wade-input p-2 sm:p-3 relative">
+									<div class="chrome-edge"></div>
+									<textarea id="chat-input" rows="1" class="w-full resize-none outline-none text-zinc-100 placeholder-zinc-600 p-3 text-[14px] bg-transparent leading-relaxed" placeholder="Message W.A.D.E..."></textarea>
+									<div class="flex justify-between items-center mt-2 px-2 pb-1">
+										<div class="flex items-center gap-3 text-zinc-500">
+											<svg class="w-4 h-4 cursor-pointer hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+											</svg>
+										</div>
+										<div class="flex items-center gap-3">
+											<button id="send-btn" onclick="sendMessage()" class="bg-white text-black hover:bg-zinc-200 h-9 px-5 rounded-full flex items-center gap-2 font-display text-[11px] font-bold tracking-wide transition-all shadow-[0_0_15px_rgba(255,255,255,0.1)]"> Send <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M12 5l7 7-7 7" />
+												</svg>
+											</button>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div id="tab-tasks" class="tab-content flex-col h-full overflow-y-auto p-6 pb-20 mx-auto w-full">
+						<div class="flex items-end justify-between mb-8 pb-4 border-b border-white/5">
+							<div>
+								<h2 class="font-display text-lg font-bold text-white tracking-wide">Task Queue</h2>
+								<span id="tasks-stats" class="font-mono-custom text-[11px] text-zinc-500 tracking-wider mt-1 block">-- tasks</span>
+							</div>
+							<button onclick="loadTasks()" class="btn-ghost h-9 px-5 text-[12px] font-medium rounded-full border-zinc-700">Refresh</button>
+						</div>
+						<div id="tasks-active" class="mb-8">
+							<p class="section-header mb-4">Active</p>
+							<div id="tasks-active-list" class="space-y-3">
+								<div class="font-sans text-[13px] text-zinc-600 text-center py-6">No active tasks.</div>
+							</div>
+						</div>
+						<div id="tasks-recent">
+							<p class="section-header mb-4">Recent</p>
+							<div id="tasks-recent-list" class="space-y-3">
+								<div class="font-sans text-[13px] text-zinc-600 text-center py-6">Loading...</div>
+							</div>
+						</div>
+					</div>
+					<div id="tab-memory" class="tab-content flex-col h-full overflow-y-auto p-6 pb-20 mx-auto w-full">
+						<div class="flex items-end justify-between mb-8 pb-4 border-b border-white/5">
+							<div>
+								<h2 class="font-display text-lg font-bold text-white tracking-wide">Memory Manager</h2>
+								<span id="memory-stats" class="font-mono-custom text-[11px] text-zinc-500 tracking-wider mt-1 block">-- facts</span>
+							</div>
+							<div class="flex items-center gap-3">
+								<button onclick="loadMemoryTab()" class="btn-ghost h-9 px-5 text-[12px] font-medium rounded-full border-zinc-700">Refresh</button>
+								<button onclick="clearMemory()" class="btn-ghost h-9 px-5 text-[12px] font-medium rounded-full border-zinc-700 text-red-500/70 hover:text-red-400">Purge Session</button>
+							</div>
+						</div>
+						<div class="mb-8">
+							<p class="section-header mb-3">Purge Context</p>
+							<div class="flex gap-2">
+								<input id="forget-query" type="text" placeholder="e.g. my birthday, location, preferences&#x2026;" class="flex-1 bg-raised border border-white/10 rounded-sm px-3 py-2 font-sans text-[13px] text-zinc-300 placeholder-zinc-600 focus:outline-none focus:border-white/25 transition-colors" onkeydown="if(event.key==='Enter') forgetContext()">
+								<button onclick="forgetContext()" class="btn-ghost h-9 px-4 text-[12px] font-medium rounded-sm border-zinc-700 shrink-0">Forget</button>
+							</div>
+							<p id="forget-status" class="font-mono-custom text-[10px] text-zinc-600 mt-2 hidden"></p>
+						</div>
+						<div class="mb-8">
+							<p class="section-header mb-1">Extracted Facts</p>
+							<p class="font-sans text-[11px] text-zinc-600 mb-3">Double-click a value to edit inline. Press Enter or click away to save.</p>
+							<div id="memory-facts" class="space-y-1">
+								<div class="font-sans text-[13px] text-zinc-600 py-4">Loading facts...</div>
+							</div>
+						</div>
+						<div>
+							<p class="section-header mb-3">Conversation Timeline</p>
+							<div id="memory-entries" class="space-y-3">
+								<div class="font-sans text-[13px] text-zinc-600 text-center py-12">Loading timeline...</div>
+							</div>
+						</div>
+					</div>
+					<div id="tab-monitors" class="tab-content flex-col h-full overflow-y-auto p-6 pb-20 mx-auto w-full">
+						<div class="flex items-end justify-between mb-8 pb-4 border-b border-white/5">
+							<div>
+								<h2 class="font-display text-lg font-bold text-white tracking-wide">Monitor Daemons</h2>
+								<p class="text-sm text-zinc-500 mt-1">Persistent background watchers.</p>
+							</div>
+							<button onclick="loadMonitors()" class="btn-ghost h-9 px-5 text-[12px] font-medium rounded-full border-zinc-700">Refresh</button>
+						</div>
+						<div id="monitors-list" class="grid sm:grid-cols-2 gap-4">
+							<div class="font-sans text-[13px] text-zinc-600 text-center py-12 sm:col-span-2">Loading monitors...</div>
+						</div>
+					</div>
+					<div id="tab-settings" class="tab-content flex-col h-full overflow-y-auto p-6 pb-20 mx-auto w-full">
+						<div class="mb-8 pb-4 border-b border-white/5">
+							<h2 class="font-display text-lg font-bold text-white tracking-wide">Configuration</h2>
+							<p class="text-sm text-zinc-500 mt-1">Core operational parameters and identity matrix.</p>
+						</div>
+						<div class="flex flex-col gap-4">
+							<div class="module-card p-6">
+								<p class="section-header mb-5">General Identity</p>
+								<div class="space-y-4 mb-6">
+									<div>
+										<label class="text-[11px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">User Designation</label>
+										<input type="text" id="setting-user-name" class="w-full bg-void border border-white/10 text-white placeholder-zinc-700 p-3 rounded-lg outline-none focus:border-white/30 font-mono-custom text-sm transition-all" placeholder="Full designation required">
+									</div>
+									<div>
+										<label class="text-[11px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Compute Provider</label>
+										<select id="setting-provider" class="w-full bg-void border border-white/10 text-white p-3 rounded-lg outline-none focus:border-white/30 font-mono-custom text-sm cursor-pointer appearance-none">
+											<option value="ollama">Local Compute (Ollama)</option>
+											<option value="openai">External Cloud (OpenAI)</option>
+										</select>
+									</div>
+								</div>
+								<div class="flex items-center gap-4">
+									<button onclick="saveSettings()" class="btn-execute h-10 px-6">Commit Identity</button>
+									<span id="settings-status" class="font-mono-custom text-[11px] text-zinc-400 hidden"></span>
+								</div>
+							</div>
+							<div class="module-card p-6">
+								<p class="section-header mb-5">Cognitive Indexer</p>
+								<p class="text-[12px] text-zinc-500 mb-6">Determine which sections of your machine W.A.D.E. is allowed to index and remember.</p>
+								<div class="space-y-4 mb-8">
+									<label class="flex items-center gap-3 cursor-pointer group">
+										<input type="checkbox" id="indexer-zone-core" class="w-4 h-4 bg-void border-white/10 rounded focus:ring-0 checked:bg-[#00ff66]">
+										<div class="flex flex-col">
+											<span class="font-mono-custom text-[12px] text-zinc-300 group-hover:text-white transition-colors">Core Workspace</span>
+											<span class="text-[10px] text-zinc-500">~/.wade/workspace and project root</span>
+										</div>
+									</label>
+									<label class="flex items-center gap-3 cursor-pointer group">
+										<input type="checkbox" id="indexer-zone-system" class="w-4 h-4 bg-void border-white/10 rounded focus:ring-0 checked:bg-[#00ff66]">
+										<div class="flex flex-col">
+											<span class="font-mono-custom text-[12px] text-zinc-300 group-hover:text-white transition-colors">System Documents</span>
+											<span class="text-[10px] text-zinc-500">OneDrive Documents and Desktop</span>
+										</div>
+									</label>
+									<label class="flex items-center gap-3 cursor-pointer group">
+										<input type="checkbox" id="indexer-zone-projects" class="w-4 h-4 bg-void border-white/10 rounded focus:ring-0 checked:bg-[#00ff66]">
+										<div class="flex flex-col">
+											<span class="font-mono-custom text-[12px] text-zinc-300 group-hover:text-white transition-colors">Project Directories</span>
+											<span class="text-[10px] text-zinc-500">Directories defined in project settings</span>
+										</div>
+									</label>
+									<div class="pt-2">
+										<label class="text-[11px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">Custom Directories</label>
+										<div id="indexer-custom-list" class="space-y-2 mb-3">
+										</div>
+										<div class="flex gap-2">
+											<input type="text" id="indexer-custom-input" class="flex-1 bg-void border border-white/10 text-white placeholder-zinc-700 px-3 py-2 rounded-lg outline-none focus:border-white/30 font-mono-custom text-[12px]" placeholder="Absolute path to directory">
+											<button onclick="addIndexerDir()" class="btn-ghost h-9 px-4 text-[12px] font-medium rounded-lg border-zinc-700">Add</button>
+										</div>
+									</div>
+								</div>
+								<div class="flex flex-wrap items-center gap-4 pt-4 border-t border-white/5">
+									<button onclick="saveIndexerSettings()" class="btn-execute h-10 px-6">Save Indexer</button>
+									<button onclick="rebuildIndex()" class="btn-ghost h-10 px-6 border-zinc-700 hover:border-red-500/50 hover:text-red-400">Rebuild Index</button>
+									<span id="indexer-status" class="font-mono-custom text-[11px] text-zinc-400 hidden"></span>
+								</div>
+							</div>
+							<div class="module-card p-6">
+								<p class="section-header mb-5">Model Routing Table</p>
+								<p class="text-[12px] text-zinc-500 mb-6">Maps internal task roles to specific Ollama models. Ensure models are pulled locally.</p>
+								<div id="routing-table" class="grid sm:grid-cols-2 gap-x-8 gap-y-4 mb-8">
+									<div class="font-mono-custom text-[11px] text-zinc-500">Establishing routing matrix...</div>
+								</div>
+								<div class="flex items-center gap-4 pt-4 border-t border-white/5">
+									<button onclick="saveModelRouting()" class="btn-execute h-10 px-6">Save Routing</button>
+									<span id="routing-status" class="font-mono-custom text-[11px] text-zinc-400 hidden"></span>
+								</div>
+							</div>
+							<div class="module-card p-6">
+								<p class="section-header mb-2">Skill Permissions by Tier</p>
+								<p class="text-[12px] text-zinc-500 mb-5">Control which skill categories each tier can invoke. New skills auto-appear when added.</p>
+								<div id="skill-permissions-table" class="overflow-x-auto mb-6">
+									<div class="font-mono-custom text-[11px] text-zinc-500">Loading permissions...</div>
+								</div>
+								<div class="flex items-center gap-4 pt-4 border-t border-white/5">
+									<button onclick="saveSkillPermissions()" class="btn-execute h-10 px-6">Save Permissions</button>
+									<span id="permissions-status" class="font-mono-custom text-[11px] text-zinc-400 hidden"></span>
+								</div>
+							</div>
+							<div class="module-card p-6">
+								<p class="section-header mb-2">Projects Registry</p>
+								<p class="text-[12px] text-zinc-500 mb-5">Projects W.A.D.E. knows about and can reference in any conversation. Saved to PROJECTS.md.</p>
+								<div id="projects-list" class="space-y-2 mb-6">
+									<div class="font-mono-custom text-[11px] text-zinc-500">Loading projects...</div>
+								</div>
+								<div class="border-t border-white/5 pt-5 mb-5">
+									<p class="text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-3">Add Project</p>
+									<div class="grid sm:grid-cols-2 gap-3 mb-3">
+										<input id="proj-name" type="text" placeholder="Project name *" class="bg-void border border-white/10 text-white placeholder-zinc-700 px-3 py-2.5 rounded-lg outline-none focus:border-white/30 font-mono-custom text-[12px] transition-all">
+										<input id="proj-path" type="text" placeholder="Path (e.g. C:\Projects\my-app)" class="bg-void border border-white/10 text-white placeholder-zinc-700 px-3 py-2.5 rounded-lg outline-none focus:border-white/30 font-mono-custom text-[12px] transition-all">
+										<input id="proj-stack" type="text" placeholder="Stack (e.g. Python / FastAPI)" class="bg-void border border-white/10 text-white placeholder-zinc-700 px-3 py-2.5 rounded-lg outline-none focus:border-white/30 font-mono-custom text-[12px] transition-all">
+										<select id="proj-status" class="bg-void border border-white/10 text-white px-3 py-2.5 rounded-lg outline-none focus:border-white/30 font-mono-custom text-[12px] cursor-pointer">
+											<option value="Active">Active</option>
+											<option value="On-hold">On-hold</option>
+											<option value="Archived">Archived</option>
+										</select>
+										<input id="proj-purpose" type="text" placeholder="Purpose — one sentence" class="sm:col-span-2 bg-void border border-white/10 text-white placeholder-zinc-700 px-3 py-2.5 rounded-lg outline-none focus:border-white/30 font-mono-custom text-[12px] transition-all">
+										<input id="proj-notes" type="text" placeholder="Notes (optional)" class="sm:col-span-2 bg-void border border-white/10 text-white placeholder-zinc-700 px-3 py-2.5 rounded-lg outline-none focus:border-white/30 font-mono-custom text-[12px] transition-all">
+									</div>
+									<button onclick="addProject()" class="btn-ghost h-9 px-5 text-[12px] font-medium rounded-full border-zinc-700">+ Add</button>
+								</div>
+								<div class="flex items-center gap-4 pt-4 border-t border-white/5">
+									<button onclick="saveProjects()" class="btn-execute h-10 px-6">Save Projects</button>
+									<span id="projects-status" class="font-mono-custom text-[11px] text-zinc-400 hidden"></span>
+								</div>
+							</div>
+							<div class="module-card p-6">
+								<p class="section-header mb-2">Workspace File Editor</p>
+								<p class="text-[12px] text-zinc-500 mb-5">Edit W.A.D.E.'s context files directly. Changes take effect on the next message.</p>
+								<div class="flex items-center gap-3 mb-4">
+									<select id="workspace-file-select" onchange="loadWorkspaceFile()" class="bg-void border border-white/10 text-white px-3 py-2.5 rounded-lg outline-none focus:border-white/30 font-mono-custom text-[12px] cursor-pointer">
+										<option value="PROJECTS.md">PROJECTS.md</option>
+										<option value="USER.md">USER.md</option>
+										<option value="BUSINESS.md">BUSINESS.md</option>
+										<option value="HEARTBEAT.md">HEARTBEAT.md</option>
+									</select>
+								</div>
+								<textarea id="workspace-file-content" spellcheck="false" class="w-full bg-void border border-white/10 text-zinc-300 font-mono-custom text-[12px] leading-relaxed p-4 rounded-lg outline-none focus:border-white/25 resize-none h-72 transition-all" placeholder="Select a file to edit..."></textarea>
+								<div class="flex items-center gap-4 pt-4 border-t border-white/5 mt-4">
+									<button onclick="saveWorkspaceFile()" class="btn-execute h-10 px-6">Save File</button>
+									<span id="workspace-file-status" class="font-mono-custom text-[11px] text-zinc-400 hidden"></span>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div id="tab-users" class="tab-content flex-col h-full overflow-y-auto p-6 pb-20 mx-auto w-full">
+						<div class="flex items-end justify-between mb-8 pb-4 border-b border-white/5">
+							<div>
+								<h2 class="font-display text-lg font-bold text-white tracking-wide">User Registry</h2>
+								<span id="users-stats" class="font-mono-custom text-[11px] text-zinc-500 tracking-wider mt-1 block">-- users</span>
+							</div>
+							<div class="flex items-center gap-3">
+								<select id="users-tier-filter" onchange="loadUsers()" class="bg-void border border-white/10 text-white p-2 rounded-lg outline-none font-mono-custom text-[11px] cursor-pointer">
+									<option value="">All Tiers</option>
+									<option value="admin">Admin</option>
+									<option value="family">Family</option>
+									<option value="friends">Friends</option>
+									<option value="guests">Guests</option>
+									<option value="strangers">Strangers</option>
+								</select>
+								<button onclick="loadUsers()" class="btn-ghost h-9 px-5 text-[12px] font-medium rounded-full border-zinc-700">Refresh</button>
+							</div>
+						</div>
+						<div id="users-list" class="space-y-3 mb-8">
+							<div class="font-sans text-[13px] text-zinc-600 text-center py-12">Loading users...</div>
+						</div>
+						<div id="user-delete-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md">
+							<div class="module-card p-6 w-full max-w-sm mx-4 border-red-500/20">
+								<h3 class="font-display text-base font-bold text-white mb-2">Clear User Memory</h3>
+								<p class="font-sans text-[12px] text-zinc-400 mb-6 leading-relaxed">This will permanently delete all conversation history for <span id="delete-user-name" class="text-white font-medium"></span>. This action cannot be undone. </p>
+								<div class="flex gap-3">
+									<button id="confirm-delete-user-btn" class="flex-1 h-10 font-display text-[11px] font-bold tracking-widest uppercase bg-red-500 text-white hover:bg-red-600 transition-colors rounded-sm">Clear History</button>
+									<button onclick="hideUserDeleteModal()" class="flex-1 h-10 font-display text-[11px] font-bold tracking-widest uppercase bg-transparent border border-white/10 text-zinc-400 hover:text-white transition-colors rounded-sm">Cancel</button>
+								</div>
+							</div>
+						</div>
+						<div id="user-history-panel" class="hidden mt-2 pt-8 border-t border-white/5">
+							<div class="flex items-center justify-between mb-6">
+								<h3 id="user-history-title" class="font-display text-base font-bold text-white"></h3>
+								<button onclick="closeUserHistory()" class="btn-ghost h-8 px-4 text-[11px]">Close</button>
+							</div>
+							<div id="user-history-content" class="space-y-6"></div>
+						</div>
+						<div class="mt-8 pt-8 border-t border-white/5">
+							<p class="section-header mb-2">Register WhatsApp Number</p>
+							<p class="text-[12px] text-zinc-500 mb-5">Pre-register a contact to assign them a tier before their first message.</p>
+							<div class="flex flex-col sm:flex-row gap-3">
+								<input id="new-user-phone" type="text" placeholder="+1 234 567 8901 or 12345678901" class="flex-1 bg-void border border-white/10 text-white text-[12px] font-mono-custom px-4 py-2.5 rounded-lg outline-none focus:border-[#00ff66]/40 transition-colors" />
+								<select id="new-user-tier" class="bg-void border border-white/10 text-white px-3 py-2.5 rounded-lg outline-none font-mono-custom text-[11px] cursor-pointer">
+									<option value="guests">Guests</option>
+									<option value="friends">Friends</option>
+									<option value="family">Family</option>
+									<option value="admin">Admin</option>
+								</select>
+								<button onclick="registerUser()" class="btn-execute h-10 px-6 shrink-0">Register Number</button>
+								<span id="user-register-status" class="font-mono-custom text-[11px] text-zinc-400 hidden self-center"></span>
+							</div>
+						</div>
+						<div class="mt-8 pt-8 border-t border-white/5">
+							<p class="section-header mb-2">Device Management</p>
+							<p class="text-[12px] text-zinc-500 mb-5">Register browser devices to assign them a tier. Copy the Device ID shown on any visiting browser and paste it below.</p>
+							<div id="devices-list" class="space-y-2 mb-6">
+								<div class="font-mono-custom text-[11px] text-zinc-500">Loading devices...</div>
+							</div>
+							<div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-white/5">
+								<input id="new-device-id" type="text" placeholder="Device UUID" class="flex-1 bg-void border border-white/10 text-white text-[12px] font-mono-custom px-4 py-2.5 rounded-lg outline-none focus:border-[#00ff66]/40 transition-colors" />
+								<select id="new-device-tier" class="bg-void border border-white/10 text-white px-3 py-2.5 rounded-lg outline-none font-mono-custom text-[11px] cursor-pointer">
+									<option value="admin">Admin</option>
+									<option value="family">Family</option>
+									<option value="friends">Friends</option>
+									<option value="guests">Guests</option>
+								</select>
+								<button onclick="registerDevice()" class="btn-execute h-10 px-6 shrink-0">Register Device</button>
+								<span id="device-status" class="font-mono-custom text-[11px] text-zinc-400 hidden self-center"></span>
+							</div>
+						</div>
+					</div>
+					<div id="tab-security" class="tab-content flex-col h-full overflow-y-auto p-6 pb-20 mx-auto w-full">
+						<div class="flex items-end justify-between mb-8 pb-4 border-b border-white/5">
+							<div>
+								<h2 class="font-display text-lg font-bold text-white tracking-wide">Security Grid</h2>
+								<div class="flex items-center gap-3 mt-2">
+									<span id="security-armed-status" class="sys-tag text-sonargreen">DISARMED</span>
+									<span id="security-camera-count" class="font-mono-custom text-[11px] text-zinc-500">-- cameras</span>
+								</div>
+							</div>
+							<div class="flex items-center gap-3">
+								<button id="btn-arm" onclick="securityAction('arm')" class="transition-all duration-300 ease-in-out btn-ghost h-9 px-5 text-[11px] font-medium">ARM</button>
+								<button id="btn-disarm" onclick="securityAction('disarm')" class="transition-all duration-300 ease-in-out btn-execute h-9 px-5 text-[11px] font-medium">DISARM</button>
+								<button onclick="loadSecurity()" class="btn-ghost h-9 px-5 text-[12px] font-medium">Refresh</button>
+							</div>
+						</div>
+						<div id="security-camera-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+							<div class="font-sans text-[13px] text-zinc-600 text-center py-12 sm:col-span-3">Loading camera grid...</div>
+						</div>
+						<div>
+							<p class="section-header mb-4">Alert Log</p>
+							<div id="security-alerts" class="space-y-2">
+								<div class="font-sans text-[13px] text-zinc-600 py-4">Loading alerts...</div>
+							</div>
+						</div>
+					</div>
+					<div id="tab-recon" class="tab-content flex-col h-full overflow-y-auto p-6 pb-20 mx-auto w-full">
+						<div class="flex items-end justify-between mb-8 pb-4 border-b border-white/5 shrink-0">
+							<div>
+								<h2 class="font-display text-xl font-bold text-white tracking-wide">Global Reconnaissance</h2>
+								<p class="font-sans text-[13px] text-zinc-500 mt-1">Live news telemetry, broadcast intercepts, and geospatial monitoring.</p>
+							</div>
+							<button onclick="loadRecon()" class="btn-ghost h-9 px-6 text-[12px] font-medium border-zinc-700 rounded-full hover:bg-white/[0.05] transition-colors">Sync Uplink</button>
+						</div>
+						<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+							<div class="module-card p-5 lg:col-span-8 flex flex-col">
+								<div class="flex items-center justify-between mb-4">
+									<span class="font-mono-custom text-[11px] font-bold text-zinc-500 tracking-wider uppercase">Geospatial Hotspots</span>
+									<span class="sys-tag border-white/10 text-zinc-400 bg-transparent">LIVE</span>
+								</div>
+								<div id="recon-map" class="flex-1 w-full rounded border border-white/5" style="min-height: 450px; background: var(--void); z-index: 10;"></div>
+							</div>
+							<div class="module-card p-5 lg:col-span-4 flex flex-col h-[535px]">
+								<span class="font-mono-custom text-[11px] font-bold text-zinc-500 tracking-wider uppercase mb-4 block shrink-0">Latest Intel Intercepts</span>
+								<div id="recon-feed" class="space-y-3 overflow-y-auto flex-1 pr-2 custom-scrollbar">
+									<div class="font-sans text-[13px] text-zinc-600 py-4">Establishing secure uplink...</div>
+								</div>
+							</div>
+							<div class="module-card p-5 lg:col-span-3 flex flex-col">
+								<div class="flex items-center justify-between mb-3">
+									<span class="font-mono-custom text-[10px] font-bold text-zinc-500 tracking-wider uppercase truncate">News Broadcast Intercept</span>
+									<div class="w-2 h-2 rounded-full border border-green-900 bg-transparent shrink-0"></div>
+								</div>
+								<div class="w-full aspect-video bg-[#0f0f0f] rounded border border-white/10 relative overflow-hidden">
+									<iframe class="absolute top-0 left-0 w-full h-full pointer-events-none" src="https://www.youtube.com/embed/C96oohpWBGw?autoplay=1&mute=1&controls=0&modestbranding=1" title="News Intercept" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+								</div>
+							</div>
+							<div class="module-card p-5 lg:col-span-3 flex flex-col">
+								<div class="flex items-center justify-between mb-3">
+									<span class="font-mono-custom text-[10px] font-bold text-zinc-500 tracking-wider uppercase truncate">Live Feed: New York City</span>
+									<div class="w-2 h-2 rounded-full border border-green-900 bg-transparent shrink-0"></div>
+								</div>
+								<div class="w-full aspect-video bg-[#0f0f0f] rounded border border-white/10 relative overflow-hidden">
+									<iframe class="absolute top-0 left-0 w-full h-full pointer-events-none" src="https://www.youtube.com/embed/VGnFLdQW39A?autoplay=1&mute=1&controls=0&modestbranding=1" title="New York City Live Feed" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+								</div>
+							</div>
+							<div class="module-card p-6 lg:col-span-6 flex flex-col justify-between">
+								<div class="mb-4">
+									<span class="font-mono-custom text-[11px] font-bold text-zinc-500 tracking-wider uppercase mb-3 block">Global Sentiment Vector</span>
+									<p id="recon-volatility-insight" class="font-sans text-[13px] text-zinc-400 leading-relaxed font-light line-clamp-3">Awaiting telemetry for vector analysis...</p>
+								</div>
+								<div class="flex items-end justify-between mt-auto pt-2 border-t border-white/5">
+									<div class="flex-1 pr-6 sm:pr-10 pb-1">
+										<div class="flex items-center justify-between mb-3">
+											<span class="font-mono-custom text-[11px] text-zinc-400">Volatility Index</span>
+											<span id="recon-volatility-status" class="font-mono-custom text-[10px] text-zinc-500 tracking-wider">--</span>
+										</div>
+										<div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+											<div id="recon-volatility-bar" class="h-full bg-zinc-300 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+										</div>
+									</div>
+									<div class="border-l border-white/10 pl-6 sm:pl-8 text-right shrink-0">
+										<div id="recon-volatility-value" class="font-display text-4xl sm:text-5xl font-bold text-white tracking-tight leading-none mb-1.5">--</div>
+										<span class="font-mono-custom text-[9px] text-zinc-500 tracking-widest uppercase">W.A.D.E. Metric</span>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div id="tab-aero" class="tab-content flex-col h-full overflow-y-auto p-6 pb-20 mx-auto w-full">
+						<div class="flex items-end justify-between mb-6 pb-4 border-b border-white/5">
+							<div>
+								<h2 class="font-display text-lg font-bold text-white tracking-wide">Aero-Flow Engine</h2>
+								<span id="aero-status" class="font-mono-custom text-[11px] text-zinc-500 tracking-wider mt-1 block">Orbital & Atmospheric Transit Layer.</span>
+							</div>
+							<button onclick="loadAero()" class="sys-tag text-sonargreen border-sonargreen/30 hover:bg-sonargreen/10 transition-colors cursor-pointer">SWEEP AIRSPACE</button>
+						</div>
+						<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+							<div class="lg:col-span-2 module-card p-4 h-[500px] flex flex-col relative">
+								<div class="flex justify-between items-center mb-3 shrink-0 z-10">
+									<span class="section-header">Live Transit Vectors</span>
+									<span id="aero-count" class="font-mono-custom text-[10px] text-zinc-400">0 ASSETS TRACKED</span>
+								</div>
+								<div id="aero-map" class="flex-1 rounded min-h-0" style="background: var(--void);"></div>
+							</div>
+							<div class="flex flex-col gap-4 h-[500px]">
+								<div class="module-card p-4 flex flex-col border-t-2 border-t-zinc-700" id="aero-deep-view-card">
+									<div class="flex items-center gap-2 mb-2">
+										<svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+										</svg>
+										<span class="section-header text-zinc-300">W.A.D.E. Deep View</span>
+										<span id="aero-deep-view" class="hidden"></span>
+									</div>
+									<div id="aero-insight-text" class="text-xs text-zinc-400 font-mono-custom leading-relaxed">Awaiting airspace sweep to analyze corporate signatures...</div>
+								</div>
+								<div class="module-card p-4 flex-1 flex flex-col overflow-hidden bg-white/[0.01]">
+									<span class="section-header mb-3">Active Flights</span>
+									<div id="aero-asset-details" class="flex-1 overflow-y-auto min-h-0">
+										<div id="aero-table" class="space-y-1 p-2">
+											<div class="font-sans text-[13px] text-zinc-600 text-center py-12">Establishing ADS-B uplink...</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div id="tab-credentials" class="tab-content flex-col h-full overflow-y-auto p-6 pb-20 mx-auto w-full">
+						<div id="credentials-root"></div>
+					</div>
+				</section>
+				<section id="workspace-pane" class="w-0 flex-shrink-0 border-l border-white/5 transition-all duration-400 ease-in-out overflow-hidden flex flex-col z-10 bg-void">
+					<div class="h-14 flex items-center justify-between px-6 border-b border-white/5 min-w-[300px]">
+						<span class="font-display text-[11px] font-bold text-zinc-400 tracking-wider uppercase">Workspace</span>
+						<button onclick="closeWorkspace()" class="text-zinc-500 hover:text-white p-2 transition-colors">
+							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+							</svg>
+						</button>
+					</div>
+					<div class="flex-1 overflow-y-auto p-4 min-w-[300px] relative">
+						<div class="absolute left-0 top-0 bottom-0 w-10 border-r border-white/5 flex flex-col pt-4 items-center bg-surface" id="line-numbers" style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:#525252;line-height:1.75rem;"></div>
+						<pre id="workspace-content" class="text-[13px] whitespace-pre-wrap leading-[1.75rem] pl-10 text-zinc-300 font-mono-custom"></pre>
+					</div>
+				</section>
+			</main>
+		</div>
+		<script src="/static/js/app.js" defer></script>
+		<script src="/static/js/credentials.js" defer></script>
+		<script src="/static/js/tauri-bridge.js" defer></script>
+		<div id="onboarding-overlay" style="display:none;">
+			<div id="ob-screen-ollama" class="ob-screen" style="display:none;">
+				<div class="ob-card">
+					<div class="ob-edge"></div>
+					<div class="ob-badge">
+						<span class="sys-tag">SETUP</span>
+					</div>
+					<h2 class="ob-title">One dependency required</h2>
+					<p class="ob-body">W.A.D.E. uses <strong>Ollama</strong> to run AI models locally on your machine. </p>
+					<a id="ob-ollama-link" href="https://ollama.com/download" target="_blank" class="btn-execute ob-action-btn">Download Ollama</a>
+					<p class="ob-hint">After installing, click below to continue.</p>
+					<button id="ob-ollama-check" class="btn-ghost ob-action-btn">I've installed Ollama</button>
+				</div>
+			</div>
+			<div id="ob-screen-model" class="ob-screen" style="display:none;">
+				<div class="ob-card">
+					<div class="ob-edge"></div>
+					<div class="ob-badge">
+						<span class="sys-tag">DOWNLOADING</span>
+					</div>
+					<h2 class="ob-title">Pulling AI model</h2>
+					<p class="ob-body">This only happens once. <span id="ob-model-name"></span>
+					</p>
+					<div class="progress-bar ob-progress">
+						<div id="ob-progress-fill" class="progress-fill"></div>
+					</div>
+					<p id="ob-progress-label" class="ob-hint">Starting download...</p>
+				</div>
+			</div>
+			<div id="ob-screen-name" class="ob-screen" style="display:none;">
+				<div class="ob-card">
+					<div class="ob-edge"></div>
+					<div class="ob-badge">
+						<span class="sys-tag">ALMOST THERE</span>
+					</div>
+					<h2 class="ob-title">What should W.A.D.E. call you?</h2>
+					<input id="ob-name-input" type="text" placeholder="Your name" class="ob-name-input" maxlength="64" autocomplete="off" />
+					<button id="ob-name-submit" class="btn-execute ob-action-btn">Next →</button>
+				</div>
+			</div>
+			<div id="ob-screen-credentials" class="ob-screen" style="display:none;">
+				<div class="ob-card ob-card--wide">
+					<div class="ob-edge"></div>
+					<div class="ob-badge">
+						<span class="sys-tag">INTEGRATIONS</span>
+					</div>
+					<h2 class="ob-title">Connect your services</h2>
+					<p class="ob-body">All optional — stored locally in <code style="font-size:0.78em;color:var(--text-secondary)">~/.wade/credentials.json</code>, never sent anywhere. Skip now and configure later in the <strong>Credentials</strong> tab. </p>
+					<div class="ob-creds-body">
+						<div class="ob-creds-section">
+							<p class="ob-creds-group-label">LLM Providers</p>
+							<div class="ob-cred-row">
+								<label class="ob-cred-label">OpenAI API Key</label>
+								<input id="ob-cred-openai-api_key" type="password" class="ob-cred-input" placeholder="sk-..." autocomplete="off" />
+							</div>
+							<div class="ob-cred-row">
+								<label class="ob-cred-label">Anthropic API Key</label>
+								<input id="ob-cred-anthropic-api_key" type="password" class="ob-cred-input" placeholder="sk-ant-..." autocomplete="off" />
+							</div>
+							<div class="ob-cred-row">
+								<label class="ob-cred-label">Gemini API Key</label>
+								<input id="ob-cred-gemini-api_key" type="password" class="ob-cred-input" placeholder="AIza..." autocomplete="off" />
+							</div>
+						</div>
+						<div class="ob-creds-section">
+							<p class="ob-creds-group-label">Integrations</p>
+							<div class="ob-cred-row">
+								<label class="ob-cred-label">Notion Integration Token</label>
+								<input id="ob-cred-notion-token" type="password" class="ob-cred-input" placeholder="secret_..." autocomplete="off" />
+							</div>
+							<div class="ob-cred-row">
+								<label class="ob-cred-label">Spotify Client ID</label>
+								<input id="ob-cred-spotify-client_id" type="text" class="ob-cred-input" placeholder="Client ID" autocomplete="off" />
+							</div>
+							<div class="ob-cred-row">
+								<label class="ob-cred-label">Spotify Client Secret</label>
+								<input id="ob-cred-spotify-client_secret" type="password" class="ob-cred-input" placeholder="Client Secret" autocomplete="off" />
+							</div>
+							<div class="ob-cred-row" style="align-items:flex-end;gap:8px;">
+								<div style="flex:1;">
+									<label class="ob-cred-label">Blink Email</label>
+									<input id="ob-cred-blink-email" type="email" class="ob-cred-input" placeholder="you@example.com" autocomplete="off" />
+								</div>
+								<div style="flex:1;">
+									<label class="ob-cred-label">Blink Password</label>
+									<input id="ob-cred-blink-password" type="password" class="ob-cred-input" placeholder="••••••••" autocomplete="off" />
+								</div>
+								<button id="ob-blink-login-btn" onclick="obBlinkLogin()" style="flex-shrink:0;height:36px;padding:0 14px;font-size:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:#d4d4d8;cursor:pointer;white-space:nowrap;transition:border-color .15s,color .15s;" onmouseover="this.style.borderColor='rgba(139,92,246,.5)';this.style.color='#fff'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)';this.style.color='#d4d4d8'">Login</button>
+							</div>
+							<div id="ob-blink-pin-row" class="ob-cred-row" style="display:none;align-items:flex-end;gap:8px;">
+								<div style="flex:1;">
+									<label class="ob-cred-label">Verification Code</label>
+									<input id="ob-cred-blink-pin" type="text" inputmode="numeric" maxlength="6" class="ob-cred-input" placeholder="123456" autocomplete="off" />
+								</div>
+								<button onclick="obBlinkVerify()" style="flex-shrink:0;height:36px;padding:0 14px;font-size:12px;border-radius:8px;background:rgb(124,58,237);color:#fff;border:none;cursor:pointer;white-space:nowrap;">Verify</button>
+								<button onclick="obBlinkCancelPin()" style="flex-shrink:0;height:36px;padding:0 10px;font-size:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:#71717a;cursor:pointer;">Cancel</button>
+							</div>
+							<div id="ob-blink-status" style="display:none;font-size:11px;margin-top:2px;"></div>
+						</div>
+					</div>
+					<button id="ob-creds-save" class="btn-execute ob-action-btn">Save & Start</button>
+					<button id="ob-creds-skip" class="ob-skip-btn">Skip for now →</button>
+				</div>
+			</div>
+		</div>
+		<script src="/static/js/onboarding.js"></script>
+		<div id="qr-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onclick="if(event.target===this)hideQRModal()">
+			<div class="module-card p-6 w-full max-w-xs mx-4 flex flex-col items-center gap-4">
+				<h3 class="font-display text-base font-bold text-white">Connect on Mobile</h3>
+				<p class="font-sans text-[12px] text-zinc-400 text-center">Scan with your phone's camera — same WiFi required.</p>
+				<div id="qr-code-container" class="rounded-lg overflow-hidden bg-[#0a0a0a] p-2"></div>
+				<p id="qr-url-text" class="font-mono-custom text-[11px] text-[#00ff66] break-all text-center"></p>
+				<button onclick="hideQRModal()" class="btn-ghost h-9 px-6 text-[11px] w-full mt-1">Close</button>
+			</div>
+		</div>
+		<div id="admin-confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+			<div class="module-card p-6 w-full max-w-md mx-4">
+				<h3 class="font-display text-base font-bold text-white mb-1">Grant Admin Access</h3>
+				<p class="font-sans text-[12px] text-zinc-500 mb-1">You are about to grant full admin privileges to:</p>
+				<p id="admin-confirm-label" class="font-mono-custom text-[12px] text-[#00ff66] mb-5 break-all"></p>
+				<p class="font-sans text-[12px] text-zinc-400 mb-3">Type <span class="font-mono-custom text-white">GRANT ADMIN</span> to confirm: </p>
+				<input id="admin-confirm-input" type="text" placeholder="GRANT ADMIN" class="w-full bg-void border border-white/10 text-white text-[12px] font-mono-custom px-4 py-2.5 rounded-lg outline-none focus:border-red-500/40 transition-colors mb-4" />
+				<div class="flex gap-3">
+					<button id="admin-confirm-btn" disabled class="btn-execute h-10 px-6 flex-1 opacity-40 cursor-not-allowed">Confirm</button>
+					<button id="admin-confirm-cancel" class="btn-ghost h-10 px-6">Cancel</button>
+				</div>
+			</div>
+		</div>
+		<div id="hitl-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4">
+			<div class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+			<div class="relative w-full max-w-md bg-surface border border-white/10 shadow-2xl rounded-sm overflow-hidden">
+				<div class="h-0.5 w-full bg-gradient-to-r from-transparent via-amber-400 to-transparent"></div>
+				<div class="flex items-center gap-3 px-6 py-4 border-b border-white/5 bg-white/[0.02]">
+					<svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+					</svg>
+					<span class="font-display text-[12px] font-bold text-amber-400 tracking-[0.15em] uppercase">Authorization Required</span>
+				</div>
+				<div class="px-6 py-5 space-y-4">
+					<p class="text-[13px] text-zinc-300 leading-relaxed">W.A.D.E. wants to execute a <span class="text-white font-medium">high-risk action</span>. Review and authorize or reject below. </p>
+					<div class="space-y-2">
+						<p class="section-header flex items-center gap-2 text-zinc-500">
+							<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+								<circle cx="12" cy="12" r="3" stroke-width="1.5" />
+							</svg> Tool
+						</p>
+						<div id="hitl-tool-name" class="font-mono-custom text-[13px] text-[#00ff66] px-3 py-2 bg-[#00ff66]/5 border border-[#00ff66]/20 rounded-sm"></div>
+					</div>
+					<div class="space-y-2">
+						<p class="section-header flex items-center gap-2 text-zinc-500">
+							<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+							</svg> Arguments
+						</p>
+						<pre id="hitl-args" class="font-mono-custom text-[11px] text-zinc-300 px-3 py-2 bg-white/[0.03] border border-white/5 rounded-sm overflow-x-auto max-h-40 overflow-y-auto whitespace-pre-wrap break-all"></pre>
+					</div>
+					<div id="hitl-status" class="hidden font-mono-custom text-[12px] text-center py-2 rounded-sm"></div>
+				</div>
+				<div id="hitl-actions" class="flex gap-3 px-6 pb-6">
+					<button id="hitl-authorize-btn" onclick="_hitlDecide(true)" class="flex-1 h-10 font-display text-[11px] font-bold tracking-[0.12em] uppercase bg-[#00ff66] text-black hover:bg-[#4dff94] transition-colors rounded-sm"> Authorize </button>
+					<button id="hitl-reject-btn" onclick="_hitlDecide(false)" class="flex-1 h-10 font-display text-[11px] font-bold tracking-[0.12em] uppercase bg-transparent border border-white/15 text-zinc-400 hover:border-red-500/50 hover:text-red-400 transition-colors rounded-sm"> Reject </button>
+				</div>
+			</div>
+		</div>
+		<div id="god-mode-panel" class="god-mode-panel fixed right-0 top-10 z-[55] flex flex-col border-l border-white/5" aria-hidden="true">
+			<div class="flex items-center justify-between px-6 py-5 border-b border-white/5 bg-white/[0.01] shrink-0">
+				<div class="flex items-center gap-3">
+					<div class="w-1.5 h-1.5 rounded-full bg-[#00ff66] animate-pulse shadow-[0_0_8px_rgba(0,255,102,0.4)]"></div>
+					<span class="font-display text-[12px] font-bold text-white tracking-[0.15em] uppercase">God Mode</span>
+				</div>
+				<button onclick="toggleGodMode()" class="text-zinc-500 hover:text-white transition-colors p-1.5 rounded-md hover:bg-white/5">
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+					</svg>
+				</button>
+			</div>
+			<div class="flex-1 overflow-y-auto p-5 space-y-7">
+				<div>
+					<p class="section-header mb-3 flex items-center gap-2 text-zinc-500">
+						<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+						</svg> Task Graph <span id="gm-task-id-label" class="font-mono-custom text-[8px] text-zinc-700 truncate max-w-[120px] ml-auto normal-case"></span>
+					</p>
+					<div id="gm-task-graph" class="flex flex-col gap-1.5">
+						<span class="gm-empty-state">No task selected</span>
+					</div>
+				</div>
+				<div>
+					<p class="section-header mb-3 flex items-center gap-2 text-zinc-500">
+						<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+						</svg> Critic Console <span id="gm-verdict-count" class="font-mono-custom text-[8px] text-zinc-700 ml-auto normal-case"></span>
+					</p>
+					<div id="gm-critic-console" class="flex flex-col gap-1.5 max-h-44 overflow-y-auto">
+						<span class="gm-empty-state">Awaiting verdicts…</span>
+					</div>
+				</div>
+				<div>
+					<p class="section-header mb-3 flex items-center gap-2 text-zinc-500">
+						<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+						</svg> Performance Tape <span id="gm-total-tokens" class="font-mono-custom text-[8px] text-zinc-600 ml-auto normal-case"></span>
+					</p>
+					<div id="gm-role-summary" class="flex flex-wrap gap-2 mb-3"></div>
+					<div id="gm-perf-tape" class="flex flex-col gap-1 max-h-40 overflow-y-auto">
+						<span class="gm-empty-state">Waiting for inference…</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
