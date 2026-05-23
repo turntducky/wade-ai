@@ -1,11 +1,16 @@
 import time
 import uuid
 import logging
-import chromadb
 
 from typing import cast
 from datetime import datetime
-from chromadb.api import ClientAPI
+
+try:
+    import chromadb
+    from chromadb.api import ClientAPI
+except ImportError:
+    chromadb = None  # type: ignore[assignment]
+    ClientAPI = object  # type: ignore[assignment, misc]
 
 from app.core.chroma_utils import get_universal_ef
 
@@ -16,7 +21,7 @@ class SemanticMemoryStream:
     def __init__(self, chroma_client: ClientAPI):
         self.collection = chroma_client.get_or_create_collection(
             name="wade_episodic_memory",
-            embedding_function=cast(chromadb.EmbeddingFunction, get_universal_ef())
+            embedding_function=get_universal_ef()  # type: ignore[arg-type]
         )
 
     def store_episode(self, role: str, text: str, session_id: str = "default"):

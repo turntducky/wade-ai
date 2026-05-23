@@ -2,12 +2,18 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import chromadb
 
 from typing import cast
 from pathlib import Path
 
-from chromadb.api import ClientAPI
+try:
+    import chromadb
+    from chromadb.api import ClientAPI
+    _CHROMADB_AVAILABLE = True
+except ImportError:
+    chromadb = None  # type: ignore[assignment]
+    ClientAPI = object  # type: ignore[assignment, misc]
+    _CHROMADB_AVAILABLE = False
 
 from app.services.inference_client import inference_client as _default_client
 
@@ -17,7 +23,9 @@ WADE_DIR = Path.home() / ".wade"
 CHROMA_DB_DIR = str(WADE_DIR / "vector_store")
 _OLLAMA_BASE_URL = "http://localhost:11434"
 
-class UniversalEmbeddingFunction(chromadb.EmbeddingFunction):
+_EmbeddingFunctionBase = chromadb.EmbeddingFunction if _CHROMADB_AVAILABLE else object
+
+class UniversalEmbeddingFunction(_EmbeddingFunctionBase):  # type: ignore[misc]
     """Embedding function backed by Ollama."""
 
     def __init__(self) -> None:
@@ -39,7 +47,7 @@ class UniversalEmbeddingFunction(chromadb.EmbeddingFunction):
         results: list[list[float]] = []
         for text in input:
             results.append(self._embed_with_ollama(str(text)))
-        return cast(chromadb.Embeddings, results)
+        return results  # type: ignore[return-value]
 
     def _embed_with_ollama(self, text: str) -> list[float]:
         """Submit embedding to Ollama, routing through the running event loop when possible."""
@@ -85,6 +93,9 @@ def get_shared_chroma_client() -> ClientAPI | None:
     """Return (or lazily create) the shared ChromaDB persistent client."""
     global _shared_chroma_client
     if _shared_chroma_client is None:
+        if not _CHROMADB_AVAILABLE:
+            logger.warning("chromadb not installed — semantic memory disabled. Run: pip install chromadb")
+            return None
         try:
             _shared_chroma_client = chromadb.PersistentClient(path=CHROMA_DB_DIR)
         except Exception as e:

@@ -8,8 +8,6 @@ import base64
 import asyncio
 import tempfile
 
-import qrcode as _qrcode
-
 from typing import List
 from pydantic import BaseModel
 from fastapi import APIRouter, BackgroundTasks
@@ -26,6 +24,7 @@ router = APIRouter(prefix="/api/v1/whatsapp", tags=["whatsapp"])
 _BRIDGE_URL = os.getenv("WHATSAPP_BRIDGE_URL", "http://localhost:3000")
 
 def _raw_qr_to_data_url(raw: str) -> str:
+    import qrcode as _qrcode
     qr = _qrcode.QRCode(border=2)
     qr.add_data(raw)
     qr.make(fit=True)

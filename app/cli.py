@@ -393,13 +393,23 @@ def handle_pair(args):
 
     if not os.path.exists(os.path.join(bridge_dir, "node_modules")):
         _w("Installing required Node.js dependencies...")
-        subprocess.run(
-            [npm_cmd, "install", "@whiskeysockets/baileys", "express", "axios", "qrcode-terminal", "pino"],
-            cwd=bridge_dir,
-        )
+        try:
+            subprocess.run(
+                [npm_cmd, "install", "@whiskeysockets/baileys", "express", "axios", "qrcode-terminal", "pino"],
+                cwd=bridge_dir,
+                timeout=120,
+            )
+        except FileNotFoundError:
+            _w("ERROR: npm not found. Please install Node.js (https://nodejs.org) and try again.")
+            return
+        except subprocess.TimeoutExpired:
+            _w("ERROR: npm install timed out. Check your internet connection and try again.")
+            return
 
     try:
         subprocess.run(["node", bridge_script], cwd=bridge_dir)
+    except FileNotFoundError:
+        _w("ERROR: node not found. Please install Node.js (https://nodejs.org) and try again.")
     except KeyboardInterrupt:
         print()
         _w("Pairing session closed.")

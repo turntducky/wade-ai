@@ -1,5 +1,4 @@
 import time
-import chromadb
 
 from typing import Any
 from pathlib import Path
@@ -34,8 +33,9 @@ class PersonalityManager:
 
         if chroma_client is _NO_CLIENT:
             try:
-                self.chroma_client = chromadb.PersistentClient(path=str(CHROMA_DB_DIR))
-            except Exception:
+                import chromadb as _chromadb
+                self.chroma_client = _chromadb.PersistentClient(path=str(CHROMA_DB_DIR))
+            except (ImportError, Exception):
                 self.chroma_client = None
         else:
             self.chroma_client = chroma_client

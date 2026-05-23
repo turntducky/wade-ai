@@ -18,7 +18,12 @@ try:
 except Exception:
     pass
 
-import chromadb
+try:
+    import chromadb
+    _CHROMADB_AVAILABLE = True
+except ImportError:
+    chromadb = None  # type: ignore[assignment]
+    _CHROMADB_AVAILABLE = False
 
 from pathlib import Path
 from watchdog.observers import Observer
@@ -132,10 +137,16 @@ chroma_write_lock = threading.Lock()
 sqlite_write_lock = threading.Lock()
 db_pool_local = threading.local()
 
-chroma_client = chromadb.PersistentClient(path=str(CHROMA_DB_DIR))
+try:
+    chroma_client = chromadb.PersistentClient(path=str(CHROMA_DB_DIR)) if _CHROMADB_AVAILABLE else None
+except Exception as _e:
+    print(f"[wade] ChromaDB init failed: {_e} — indexing disabled.")
+    chroma_client = None
 universal_ef = UniversalEmbeddingFunction()
 
 def _get_or_recreate_collection(name: str, embedding_function):
+    if chroma_client is None:
+        return None
     try:
         col = chroma_client.get_or_create_collection(name=name, embedding_function=embedding_function)
 
@@ -174,7 +185,7 @@ def get_core_collection():
     if _core_collection is None:
         _core_collection = _get_or_recreate_collection(
             name="wade_core_workspace", 
-            embedding_function=cast(chromadb.EmbeddingFunction, universal_ef)
+            embedding_function=universal_ef  # type: ignore[arg-type]
         )
     return _core_collection
 
@@ -183,7 +194,7 @@ def get_system_collection():
     if _system_collection is None:
         _system_collection = _get_or_recreate_collection(
             name="wade_system_awareness", 
-            embedding_function=cast(chromadb.EmbeddingFunction, universal_ef)
+            embedding_function=universal_ef  # type: ignore[arg-type]
         )
     return _system_collection
 
