@@ -5,7 +5,6 @@ import threading
 
 from typing import Any
 from pathlib import Path
-from importlib.resources import files as _pkg_files
 
 DUCK_HOME          = Path.home() / ".wade"
 CONFIG_FILE        = DUCK_HOME / "config.yaml"
@@ -60,12 +59,10 @@ migrate_legacy_root_config()
 
 def get_package_dir() -> Path:
     """Returns the filesystem path to the 'app' package, which is used as the base for relative paths to static assets and templates."""
-    pkg = _pkg_files("app")
-    paths = getattr(pkg, "_paths", None)
-    if paths:
-        return Path(str(paths[0]))
-        
-    return Path(str(pkg))
+    # Anchored to this file's real location so it works regardless of sys.path
+    # ordering or whether another package named 'app' exists in site-packages.
+    # config.py lives at app/core/config.py, so two .parent calls reach app/.
+    return Path(__file__).resolve().parent.parent
 
 class ConfigManager:
     _cache = None

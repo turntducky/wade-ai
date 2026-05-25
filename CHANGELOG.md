@@ -6,6 +6,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and
 
 ---
 
+## [0.1.4-beta] — 2026-05-23
+
+### Fixed
+- UI assets (CSS, JS, HTML) now load correctly after pip install — `get_package_dir()` was using `importlib.resources.files("app")` which resolves against `sys.path` and picks up any other `app/` package found first (e.g. Django projects). Replaced with `Path(__file__).resolve().parent.parent` which is anchored to the installed file's physical location
+- CSS stylesheet link in `index.html` changed from relative `static/css/style.css` to absolute `/static/css/style.css`, consistent with all JS and icon references
+
+---
+
 ## [0.1.3-beta] — 2026-05-23
 
 ### Fixed
