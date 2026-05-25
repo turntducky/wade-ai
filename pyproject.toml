@@ -50,6 +50,8 @@ dependencies = [
     "blinkpy>=0.22.0",
     "spotipy>=2.23.0",
     "openai>=1.0.0",
+    "zeroconf>=0.131.0",
+    "qrcode>=7.4.0",
     # Voice: wake word, speech-to-text, text-to-speech
     "sounddevice>=0.4.6",
     "openai-whisper>=20230918",

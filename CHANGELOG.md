@@ -6,6 +6,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and
 
 ---
 
+## [0.1.3-beta] — 2026-05-23
+
+### Fixed
+- `ModuleNotFoundError: No module named 'openwakeword'` (and any remaining voice dep) on fresh pip installs — follow-up to 0.1.2 ensuring the full voice stack is visible on PyPI
+- `zeroconf` and `qrcode` added to core `dependencies` in `pyproject.toml`; both were in `requirements.txt` but absent from the pip package metadata entirely
+
+---
+
 ## [0.1.2-beta] — 2026-05-23
 
 ### Fixed
