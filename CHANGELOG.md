@@ -6,6 +6,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and
 
 ---
 
+## [0.1.5-beta] — 2026-05-23
+
+### Fixed
+- UI now renders correctly for users with ad blockers or strict content security policies
+- Removed Tailwind CDN (`cdn.tailwindcss.com`) — replaced with a pre-compiled `tailwind.min.css` (30KB) built from the actual classes used in the UI. The CDN was blocked by uBlock Origin, Brave Shields, and SES-hardened environments, which caused `tailwind is not defined` and a completely unstyled page
+- Removed Google Fonts CDN (`fonts.googleapis.com`) — blocked by the same tools. Font stacks now fall through to `Inter` if system-installed, then `system-ui` / `Segoe UI` / `Roboto`, and `Cascadia Code` / `Fira Code` / `Consolas` for monospace
+- All external network requests eliminated from the UI — W.A.D.E. runs fully offline
+
+---
+
 ## [0.1.4-beta] — 2026-05-23
 
 ### Fixed

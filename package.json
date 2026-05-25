@@ -1,0 +1,18 @@
+{
+  "name": "w.a.d.e",
+  "version": "1.0.0",
+  "description": "[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)\r [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)\r [![Version](https://img.shields.io/badge/version-0.1.0--beta-green.svg)](https://github.com/turntducky/wade-ai/releases)\r [![GitHub Stars](https://img.shields.io/github/stars/turntducky/wade-ai?style=social)](https://github.com/turntducky/wade-ai/stargazers)\r [![GitHub Forks](https://img.shields.io/github/forks/turntducky/wade-ai?style=social)](https://github.com/turntducky/wade-ai/network/members)",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "tailwindcss": "^3.4.19"
+  }
+}
