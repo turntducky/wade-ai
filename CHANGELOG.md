@@ -6,6 +6,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and
 
 ---
 
+## [0.1.6-beta] — 2026-05-23
+
+### Fixed
+- **403 on every authorization action** — the HITL approve/reject POST (`/api/tasks/{uuid}/approve`) was sending hardcoded `{ 'Content-Type': 'application/json' }` headers, omitting the required `X-WADE-Token` CSRF header. Every authorization attempt was blocked by the CSRF middleware before reaching the handler
+- **CSRF race condition on page load** — `_initCsrf()` was called without `await` inside the `DOMContentLoaded` handler, so any request that fired in the first network round-trip had an empty token and would also 403. The handler is now `async` and awaits the token before any other setup function runs
+
+---
+
 ## [0.1.5-beta] — 2026-05-23
 
 ### Fixed

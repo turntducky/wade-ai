@@ -1,2 +1,2 @@
-VERSION = "0.1.5"
-VERSION_LABEL = "v0.1.5-beta"
+VERSION = "0.1.6"
+VERSION_LABEL = "v0.1.6-beta"

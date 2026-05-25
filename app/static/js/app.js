@@ -167,7 +167,7 @@ const UI = {
     userNameTooltip: null
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     if (window.location.hash === '#quickchat') {
         document.body.classList.add('quickchat-mode');
     }
@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
     UI.tabPanes = document.querySelectorAll('.tab-content');
     UI.navBtns  = document.querySelectorAll('[id^="nav-"]');
 
-    _initCsrf();
+    await _initCsrf();
     _loadUserProfile();
     _loadVersionTag();
     _setupEventListeners();
@@ -846,7 +846,7 @@ async function _hitlDecide(approved) {
     try {
         const res = await fetch(`/api/tasks/${uuid}/approve`, {
             method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: _authHeaders(),
             body:    JSON.stringify({ approved }),
         });
 
