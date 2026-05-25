@@ -50,6 +50,12 @@ dependencies = [
     "blinkpy>=0.22.0",
     "spotipy>=2.23.0",
     "openai>=1.0.0",
+    # Voice: wake word, speech-to-text, text-to-speech
+    "sounddevice>=0.4.6",
+    "openai-whisper>=20230918",
+    "kokoro-onnx>=0.4.0",
+    "openwakeword>=0.6.0",
+    "onnxruntime>=1.17.0",
 ]
 
 # ── Optional Extras ───────────────────────────────────────────────────────────
@@ -66,15 +72,6 @@ llm = [
     "torch>=2.0.0",
 ]
 
-# Voice: wake word, speech-to-text, text-to-speech
-voice = [
-    "sounddevice>=0.4.6",
-    "openai-whisper>=20230918",
-    "kokoro-onnx>=0.4.0",
-    "openwakeword>=0.6.0",
-    "onnxruntime>=1.17.0",
-]
-
 # Headless browser automation for web scraping skills
 web = [
     "playwright>=1.40.0",
@@ -82,7 +79,7 @@ web = [
 
 # Install everything at once
 all = [
-    "wade-ai[llm,voice,web]",
+    "wade-ai[llm,web]",
 ]
 
 # Development / CI dependencies

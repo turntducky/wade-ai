@@ -2,22 +2,28 @@ import os
 import re
 import shutil
 import hashlib
-import whisper
 import logging
 import tempfile
-import onnxruntime as ort
-
-ort.set_default_logger_severity(4)
-
-import numpy as np
-import openwakeword
 import urllib.request
-import sounddevice as sd
-import openwakeword.utils
+import numpy as np
 
 from pathlib import Path
-from kokoro_onnx import Kokoro
-from openwakeword.model import Model
+
+try:
+    import whisper
+    import onnxruntime as ort
+    import sounddevice as sd
+    import openwakeword
+    import openwakeword.utils
+    from kokoro_onnx import Kokoro
+    from openwakeword.model import Model
+
+    ort.set_default_logger_severity(4)
+except ImportError as _voice_import_err:
+    raise ImportError(
+        f"Voice dependencies are not installed ({_voice_import_err}). "
+        "Run:  pip install wade-ai[voice]  or  pip install openai-whisper kokoro-onnx openwakeword onnxruntime sounddevice"
+    ) from _voice_import_err
 
 from app.core.config import VOICE_DIR
 from app.core.hardware import probe_hardware

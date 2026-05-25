@@ -6,6 +6,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and
 
 ---
 
+## [0.1.2-beta] — 2026-05-23
+
+### Fixed
+- `ModuleNotFoundError: No module named 'whisper'` on fresh installs — voice dependencies (`openai-whisper`, `sounddevice`, `kokoro-onnx`, `openwakeword`, `onnxruntime`) promoted from optional `[voice]` extra to core `dependencies` so `pip install wade-ai` includes them automatically
+- Voice import failures now surface a clear, actionable error message instead of a raw `ImportError` traceback
+
+---
+
 ## [0.1.0-beta] — 2026-05-22
 
 **First public release.** This is the initial beta of W.A.D.E. — a local-first autonomous runtime that runs continuously as a background daemon, processes environmental events proactively, and keeps all data on your hardware.
