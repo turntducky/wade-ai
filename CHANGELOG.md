@@ -6,6 +6,37 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and
 
 ---
 
+## [0.1.9-beta] — 2026-05-26
+
+### Proactive System — Full Overhaul
+
+**Event Bus (Group 1)**
+- Replaced FIFO `asyncio.Queue` with `asyncio.PriorityQueue` — `SYS_THRESHOLD` and `BUILD_LOG` events now dispatch before routine `MONITOR_STATUS` events regardless of arrival order
+- Handler dispatch changed from sequential `await` to `asyncio.gather` — slow handlers no longer block urgent ones
+- Event history expanded from 20 to 100 events (rolling deque)
+- New `get_rolling_summary()` method on `InternalEventBus` returns grouped event counts and latest payloads per type — used by the proactive engine for richer context grounding
+
+**Monitor Signal Quality (Group 2)**
+- `BUILD_LOG` events now wired into `ProactiveMonitor` — build errors detected by `BuildLogMonitor` trigger an AI task instead of silently disappearing
+- `USER_ARRIVAL` event type is now implemented end-to-end — emitted automatically when a user returns after `IDLE_CHECK_MINUTES` of inactivity; triggers a brief welcome-back message
+- Filesystem monitor now watches recursively (was root-only); adds 5-second debounce per path collapsing burst writes into a single event; ignores `.git`, `__pycache__`, `node_modules`, `*.pyc`, and other build artifacts via an ignore list
+- System monitor now captures per-process CPU and memory breakdown at the moment of a threshold breach — alert tasks include top 3 offending processes by name, PID, CPU%, and MEM%
+- System monitor adds trend detection: if CPU or RAM climbs steadily toward the threshold (slope ≥ 2%/reading, within 85% of threshold), a predictive `SYS_THRESHOLD` event fires before the breach with `is_trend: true`
+
+**Proactive Intelligence (Group 3)**
+- Intent detection: active task goals and recent file names are scored against keyword sets for `coding`, `research`, and `writing` — proactive messages now use context-appropriate prompt templates instead of generic time-of-day templates
+- Suppression rules: users and admins can opt out of specific message topics (`system_alert`, `idle`, `coding`, etc.) via `POST /api/proactive/suppress` and `DELETE /api/proactive/suppress/{topic}`; suppression persists to `~/.wade/proactive_prefs.json`
+- Event bus rolling summary now included in routine prompt context — LLM sees a count of recent events by type when deciding whether to speak
+
+**Learning Loop (Group 4)**
+- Engagement feedback: when a user sends a chat message within 3 minutes of a proactive broadcast, the engine records an `engaged` signal for that message's topic
+- Explicit feedback API: `POST /api/proactive/feedback {message_id, signal}` accepts `engaged`, `ignored`, or `dismissed`
+- Per-topic engagement scores maintained as an EMA (α=0.3) in `~/.wade/proactive_prefs.json` — low-scoring topics are sent less frequently; high-scoring topics are prioritised
+- `GET /api/proactive/preferences` returns current suppressed topics and engagement scores for the admin panel
+- New module `app/services/proactive_prefs.py` handles all preference persistence
+
+---
+
 ## [0.1.8-beta] — 2026-05-26
 
 ### Added

@@ -10,15 +10,19 @@ from app.core.events import EventType, WadeEvent, InternalEventBus
 logger = logging.getLogger("wade.monitors.proactive")
 
 class ProactiveMonitor(MonitorDaemon):
-    """Watches for system resource alerts and filesystem changes, and uses the ProactiveEngine to decide when to inject helpful tasks."""
+    """Routes bus events to the ProactiveEngine and injects tasks for critical signals."""
     name = "proactive"
 
     def __init__(self, event_bus: InternalEventBus, task_store=None) -> None:
         super().__init__(event_bus)
         if task_store is not None:
             proactive_engine.bind_task_store(task_store)
-        event_bus.subscribe(EventType.SYS_THRESHOLD, self._on_sys_threshold)
-        event_bus.subscribe(EventType.FS_CHANGE,     self._on_fs_change)
+        proactive_engine.bind_bus(event_bus)
+
+        event_bus.subscribe(EventType.SYS_THRESHOLD,   self._on_sys_threshold)
+        event_bus.subscribe(EventType.FS_CHANGE,        self._on_fs_change)
+        event_bus.subscribe(EventType.BUILD_LOG,        self._on_build_log)
+        event_bus.subscribe(EventType.USER_ARRIVAL,     self._on_user_arrival)
 
     def set_inference_fn(self, fn) -> None:
         proactive_engine.set_inference_fn(fn)
@@ -33,21 +37,47 @@ class ProactiveMonitor(MonitorDaemon):
         await proactive_engine.unregister(q)
 
     async def _on_sys_threshold(self, event: WadeEvent) -> None:
-        alerts = event.payload.get("alerts", [])
+        alerts      = event.payload.get("alerts", [])
+        is_trend    = event.payload.get("is_trend", False)
+        top_procs   = event.payload.get("top_processes", [])
+
         if not alerts:
             return
+
+        proc_summary = ""
+        if top_procs:
+            lines = [f"{p['name']} (PID {p['pid']}): CPU {p['cpu']}%, MEM {p['mem']}%" for p in top_procs[:3]]
+            proc_summary = " Top processes: " + "; ".join(lines) + "."
+
+        severity = "trending toward threshold" if is_trend else "breached threshold"
         goal = (
-            f"System resource alert: {', '.join(alerts)}. "
-            "Check active processes and advise the user on what is consuming resources."
+            f"System resource {severity}: {', '.join(alerts)}.{proc_summary} "
+            "Advise the user concisely on what is consuming resources and suggest remediation."
         )
         await self.submit_task(goal)
-        logger.info("[PROACTIVE] Injected task for system alert: %s", alerts)
+        logger.info("[PROACTIVE] Injected system task (%s): %s", severity, alerts)
 
     async def _on_fs_change(self, event: WadeEvent) -> None:
-        name       = event.payload.get("name",       "unknown")
+        name       = event.payload.get("name", "unknown")
         event_type = event.payload.get("event_type", "changed")
         proactive_engine.record_fs_event(name, event_type)
         logger.debug("[PROACTIVE] Recorded fs event: %s %s", event_type, name)
+
+    async def _on_build_log(self, event: WadeEvent) -> None:
+        path = event.payload.get("path", "unknown file")
+        tail = event.payload.get("tail", "")
+        goal = (
+            f"Build error detected in {path}. "
+            f"Log tail: {tail[:400]}. "
+            "Diagnose what failed and suggest a concrete fix."
+        )
+        await self.submit_task(goal)
+        logger.info("[PROACTIVE] Injected task for build error: %s", path)
+
+    async def _on_user_arrival(self, event: WadeEvent) -> None:
+        idle_minutes = event.payload.get("idle_minutes", 0)
+        await proactive_engine.on_user_arrival(idle_minutes)
+        logger.info("[PROACTIVE] User arrival after %.0f min idle.", idle_minutes)
 
     async def run(self) -> None:
         logger.info("[PROACTIVE] Monitor routing to ProactiveEngine...")

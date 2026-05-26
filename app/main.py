@@ -404,6 +404,13 @@ class ProactiveSettingsRequest(BaseModel):
     idle_check_minutes: int = Field(ge=1, le=1440)
     max_per_hour: int = Field(ge=1, le=60)
 
+class ProactiveFeedbackRequest(BaseModel):
+    message_id: str
+    signal: str = Field(pattern="^(engaged|ignored|dismissed)$")
+
+class ProactiveSuppressRequest(BaseModel):
+    topic: str
+
 @app.post("/api/chat")
 async def api_chat(req: ChatRequest, request: Request, tier_ctx=Depends(get_tier_context)):
     session_id = req.session_id or str(uuid.uuid4())
@@ -723,6 +730,33 @@ async def update_proactive_settings(req: ProactiveSettingsRequest, _: object = D
     proactive_module.IDLE_CHECK_MINUTES   = req.idle_check_minutes
     proactive_module.MAX_PER_HOUR         = req.max_per_hour
     return {"status": "success"}
+
+@app.post("/api/proactive/feedback")
+async def proactive_feedback(req: ProactiveFeedbackRequest):
+    from app.services.proactive import proactive_engine as _pe
+    _pe.record_feedback(req.message_id, req.signal)
+    return {"status": "success"}
+
+@app.get("/api/proactive/preferences")
+async def get_proactive_preferences(_: object = Depends(require_admin)):
+    from app.services import proactive_prefs
+    prefs = proactive_prefs.load()
+    return {
+        "suppressed":  prefs.get("suppressed", []),
+        "engagement":  prefs.get("engagement", {}),
+    }
+
+@app.post("/api/proactive/suppress")
+async def suppress_proactive_topic(req: ProactiveSuppressRequest, _: object = Depends(require_admin)):
+    from app.services import proactive_prefs
+    proactive_prefs.suppress(req.topic)
+    return {"status": "success", "suppressed": req.topic}
+
+@app.delete("/api/proactive/suppress/{topic}")
+async def unsuppress_proactive_topic(topic: str, _: object = Depends(require_admin)):
+    from app.services import proactive_prefs
+    proactive_prefs.unsuppress(topic)
+    return {"status": "success", "unsuppressed": topic}
 
 @app.get("/api/episodes")
 async def get_episodes(limit: int = 100, episode_type: str | None = None, _: object = Depends(require_admin)):
