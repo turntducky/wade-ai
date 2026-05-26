@@ -6,6 +6,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and
 
 ---
 
+## [0.1.7-beta] — 2026-05-26
+
+### Fixed
+- `⚠️ Failed to auto-load skill module 'app.skills.web.browser'` and `app.skills.web.deep_research` warnings on startup — caused by hard top-level `from playwright.async_api import ...` imports that fail when Playwright is not installed, causing the skill registry's eager-loader to log errors for both modules
+- `playwright` promoted from optional `[web]` extra to core `dependencies` so `pip install wade-ai` includes it automatically
+- `browser.py` import restructured: `from __future__ import annotations` makes type annotations lazy, playwright types moved under `TYPE_CHECKING`, and `async_playwright` uses a soft try/except so the module loads cleanly without playwright installed. `get_page()` raises a clear `RuntimeError` with install instructions if called without the package
+
+---
+
 ## [0.1.6-beta] — 2026-05-23
 
 ### Fixed

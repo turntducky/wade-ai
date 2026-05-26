@@ -58,6 +58,8 @@ dependencies = [
     "kokoro-onnx>=0.4.0",
     "openwakeword>=0.6.0",
     "onnxruntime>=1.17.0",
+    # Browser automation for web scraping and deep research skills
+    "playwright>=1.40.0",
 ]
 
 # ── Optional Extras ───────────────────────────────────────────────────────────
@@ -74,14 +76,9 @@ llm = [
     "torch>=2.0.0",
 ]
 
-# Headless browser automation for web scraping skills
-web = [
-    "playwright>=1.40.0",
-]
-
 # Install everything at once
 all = [
-    "wade-ai[llm,web]",
+    "wade-ai[llm]",
 ]
 
 # Development / CI dependencies

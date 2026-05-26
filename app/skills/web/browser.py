@@ -1,10 +1,21 @@
+from __future__ import annotations
+
 import os
 import time
 import asyncio
 import tempfile
 
-from typing import Optional
-from playwright.async_api import async_playwright, Page, Browser, Playwright
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from playwright.async_api import Page, Browser, Playwright
+
+try:
+    from playwright.async_api import async_playwright
+    _PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    _PLAYWRIGHT_AVAILABLE = False
+    async_playwright = None  # type: ignore
 
 from app.skills.registry import register_tool
 from app.core.config import ConfigManager
@@ -38,6 +49,11 @@ class BrowserController:
 
     async def get_page(self, visible: bool) -> Page:
         """Connects to remote browser or launches local fallback."""
+        if not _PLAYWRIGHT_AVAILABLE:
+            raise RuntimeError(
+                "Playwright is not installed. "
+                "Run: pip install playwright && playwright install chromium"
+            )
         async with self._lock:
             if not self.playwright:
                 self.playwright = await async_playwright().start()
