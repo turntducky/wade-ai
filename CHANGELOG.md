@@ -6,6 +6,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and
 
 ---
 
+## [0.1.8-beta] — 2026-05-26
+
+### Added
+- Playwright browser binaries are now installed automatically on first `wade start` and `wade setup` — no manual `playwright install chromium` step required. A sentinel file (`~/.wade/.playwright_ready`) is written after a successful install so subsequent starts are instant. Failures warn clearly but never block startup
+
+---
+
 ## [0.1.7-beta] — 2026-05-26
 
 ### Fixed

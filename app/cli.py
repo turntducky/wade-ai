@@ -204,7 +204,36 @@ def handle_godmode(args):
         if res2.stderr:
             _err(f"stop:  {res2.stderr.strip()}")
 
+_PLAYWRIGHT_SENTINEL = Path.home() / ".wade" / ".playwright_ready"
+
+def _ensure_playwright_browsers() -> None:
+    """Install Playwright browser binaries on first run — one-time, silent after that."""
+    if _PLAYWRIGHT_SENTINEL.exists():
+        return
+    _w("First-run: installing browser engine (this takes ~30 seconds, once only)...")
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", "playwright", "install", "chromium"],
+            capture_output=True,
+            text=True,
+            timeout=300,
+        )
+        if result.returncode == 0:
+            _PLAYWRIGHT_SENTINEL.touch()
+            _ok("Browser engine ready.")
+        else:
+            _w("Browser engine install failed — web skills will be unavailable.")
+            _w("Fix manually: playwright install chromium")
+            if result.stderr:
+                _w(result.stderr.strip())
+    except FileNotFoundError:
+        _w("playwright not found — web skills will be unavailable.")
+        _w("Fix: pip install playwright && playwright install chromium")
+    except subprocess.TimeoutExpired:
+        _w("Browser engine install timed out — web skills may be unavailable.")
+
 def handle_start(args):
+    _ensure_playwright_browsers()
     if is_admin():
         start_daemon()
     else:
@@ -501,6 +530,7 @@ def handle_setup(args):
     """Run the interactive first-time setup wizard."""
     if not args.ci:
         run_wizard(reinstall=True, advanced=getattr(args, "advanced", False))
+        _ensure_playwright_browsers()
     else:
         _w("CI mode: skipping model downloads.")
         from app.core.config import CONFIG_FILE
