@@ -6,6 +6,53 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and
 
 ---
 
+## [0.2.0-beta] — 2026-05-26
+
+### Added — Core Runtime (`app/core/runtime/`)
+
+A new deterministic execution substrate built as a self-contained module alongside the existing orchestrator. This is the foundation for a future migration to a fully event-sourced, auditable runtime.
+
+**Phase 1 — Immutable Execution Ledger** (`ledger.py`, `schemas.py`)
+- Append-only SQLite ledger with `PRAGMA synchronous=FULL` and WAL mode — no UPDATE or DELETE paths exist
+- Cryptographic hash chain: every event stores `prev_hash` (SHA-256 of predecessor) and `event_hash` (SHA-256 of its own canonical serialisation), verified by `Ledger.verify_chain()`
+- `reduce(events) -> SystemSnapshot` — the single canonical path from event log to system state; pure, deterministic, side-effect free
+- 15 typed event payload schemas covering the full task lifecycle (TASK_CREATED through SYSTEM_HALTED)
+- `SystemSnapshot` is a frozen derived projection — never a source of truth
+
+**Phase 2 — FSM Execution Kernel** (`fsm.py`)
+- Explicit 7-state machine: IDLE, COGNITION_PROPOSING, POLICY_EVALUATION, PENDING_AUTHORIZATION, EXECUTING, OBSERVATION_ROUTING, HALTED
+- HALTED is a terminal state with no valid exits
+- Three structural invariants (single active execution, no unconsumed proposal at rest, authorization locality) enforced post-transition
+- Two ledger-dependent invariants (no duplicate idempotency keys, no double authorization resolution) enforced pre-transition
+- `ExecutionKernel` is the only code with authority to gate state transitions — the LLM has none
+
+**Phase 3 — Pure Policy Engine** (`policy.py`)
+- `evaluate_policy(PolicyContext) -> PolicyDecision` is a pure function: no `datetime.now()`, no network calls, no mutable state
+- Every `PolicyDecision` records the exact `policy_version` used — enables perfect replay of historical authorization decisions after capability graph evolution
+- `authz_ttl_seconds` stored in the ledger event and consumed by the transport layer using event-time, not wall-clock time
+- Versioned capability graph registry (`_VERSIONED_GRAPHS`) — old rulesets remain registered for replay correctness
+- Four-tier risk classification: LOW (approved), MEDIUM/HIGH (requires authorization), CRITICAL (permanently denied)
+
+**Phase 4 — Idempotency & Side-Effect Reconciliation** (`idempotency.py`)
+- `execute_with_idempotency()` receives a `frozenset[str]` of committed keys derived from the ledger — no live mutable dict, no TOCTOU window
+- Exponential backoff retry: `(backoff_factor^attempt) - 1` seconds (0s, 1s, 3s, 7s for default factor=2, limit=3)
+- On retry exhaustion: compensation function invoked; on compensation failure, `SideEffectError` with a normalized error code surfaces to the FSM
+- `ExternalReconciliationRecord` tracks expected vs. observed state for EXTERNAL scope side effects that cannot be rolled back
+
+**Phase 5 — Cognitive Layer Isolation** (`cognition.py`)
+- `CognitionInput` is the only permissible LLM input — no `LedgerEvent`, no `SystemSnapshot`, no hashes, no raw errors
+- `normalize_error()` maps all raw exceptions to one of six error codes before any information crosses the LLM boundary
+- `validate_proposal()` enforces two independent gates: Pydantic schema validation + legal action set membership
+- LLMs never receive denial reasons — on rejection the FSM transitions and the LLM receives a fresh `NormalizedState`
+
+**Phase 6 — Exactly-Once Transport** (`transport.py`)
+- `LamportClock` — thread-safe logical clock with correct `max(local, received) + 1` synchronisation on receive
+- `AuthorizationResolver.try_resolve()` — four-layer guard: in-memory cache → in-flight set → ledger → event-time TTL
+- Event-time TTL computed from `event_time_lookup(requested_at_seq)` vs `event_time_lookup(current_tip_seq)` — both ledger timestamps, never `datetime.now()`
+- Two-phase commit protocol: `try_resolve()` gates access, `confirm_resolved()` commits, `abort_resolution()` rolls back on ledger write failure
+
+---
+
 ## [0.1.9-beta] — 2026-05-26
 
 ### Proactive System — Full Overhaul
