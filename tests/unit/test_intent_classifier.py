@@ -69,6 +69,7 @@ async def test_slow_path_triggered_when_top_score_below_gray_zone():
     # All scores = 0.4: above INCLUDE_THRESHOLD but top < GRAY_ZONE_MAX
     clf = _make_classifier(scores, slow_result=["workspace"])
     result = await clf.classify("do something with a file")
+    assert "workspace" in result
     clf._inference_client.complete.assert_called_once()
 
 
@@ -81,6 +82,8 @@ async def test_slow_path_triggered_on_fuzzy_boundary():
     scores["web"] = 0.54
     clf = _make_classifier(scores, slow_result=["workspace", "web"])
     result = await clf.classify("...")
+    assert "workspace" in result
+    assert "web" in result
     clf._inference_client.complete.assert_called_once()
 
 
@@ -131,6 +134,7 @@ async def test_slow_path_not_triggered_when_client_is_none():
     clf = IntentClassifier(chroma_client=mock_chroma, inference_client=None)
     result = await clf.classify("ambiguous request")
     assert isinstance(result, list)
+    assert len(result) > 0
 
 
 @pytest.mark.asyncio
