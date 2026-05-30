@@ -44,30 +44,53 @@ class SkillRouter:
         except Exception as e:
             logger.error(f"Error indexing tools: {e}")
 
-    def get_relevant_tools(self, query: str, n_results: int = 5) -> List[str]:
-        """Returns names of tools relevant to the query with a similarity threshold."""
+    def get_relevant_tools(
+        self, query: str, n_results: int = 5, exclude: "set[str] | None" = None
+    ) -> List[str]:
+        """Returns names of tools relevant to the query, optionally excluding a set of names."""
         if not self.collection or not query.strip():
             return []
-
         try:
-            results = self.collection.query(
-                query_texts=[query],
-                n_results=n_results
-            )
-            
+            # Fetch extra results to account for exclusions
+            fetch_n = n_results + len(exclude) if exclude else n_results
+            results = self.collection.query(query_texts=[query], n_results=fetch_n)
             ids = results.get("ids", [[]])[0]
             distances = results.get("distances", [[]])[0]
-            
             DISTANCE_THRESHOLD = 2.0
-            relevant = []
-            for i, dist in enumerate(distances):
-                if dist < DISTANCE_THRESHOLD:
-                    relevant.append(ids[i])
-                    
+            relevant: List[str] = []
+            for name, dist in zip(ids, distances):
+                if dist >= DISTANCE_THRESHOLD:
+                    continue
+                if exclude and name in exclude:
+                    continue
+                relevant.append(name)
+                if len(relevant) >= n_results:
+                    break
             return relevant
         except Exception as e:
-            logger.error(f"Error querying relevant tools: {e}")
+            logger.error("Error querying relevant tools: %s", e)
             return []
+
+    def rank_tools_by_relevance(self, query: str, tool_names: List[str]) -> List[str]:
+        """Returns tool_names sorted by semantic similarity to query (most relevant first).
+
+        Tools not returned by ChromaDB are appended at the end in original order.
+        """
+        if not self.collection or not tool_names:
+            return tool_names
+        try:
+            results = self.collection.query(
+                query_texts=[query], n_results=len(tool_names)
+            )
+            ids = results.get("ids", [[]])[0]
+            name_set = set(tool_names)
+            ordered = [name for name in ids if name in name_set]
+            ordered_set = set(ordered)
+            remainder = [n for n in tool_names if n not in ordered_set]
+            return ordered + remainder
+        except Exception as e:
+            logger.error("Error ranking tools by relevance: %s", e)
+            return tool_names
 
 def get_relevant_tools_context(query: str, chroma_client: Any = None) -> str:
     """Returns a formatted string of relevant tool descriptions and sidecar instructions to inject into the prompt."""

@@ -279,6 +279,20 @@ def get_all_categories() -> list[str]:
         if "manifest" in entry
     })
 
+def get_tools_by_categories(categories: list[str]) -> list[str]:
+    """Returns names of tools whose manifest category is in the given set.
+
+    Only returns tools that have both a schema and a manifest — executor-only
+    registrations (added via register_tool("name")) are excluded.
+    """
+    load_all_skills()
+    cats = set(categories)
+    return [
+        name
+        for name, entry in TOOL_INVENTORY.items()
+        if "schema" in entry and "manifest" in entry and entry["manifest"].category in cats
+    ]
+
 async def execute_tool(tool_name: str, args: Dict[str, Any]) -> str:
     """Dynamically routes a tool call to its registered function, running it safely in a sandbox."""
     load_all_skills()
