@@ -115,10 +115,10 @@ class Orchestrator:
 
         max_retries = 3
         last_error: Exception | None = None
-        collected: list[str] = []
 
         try:
             for attempt in range(1, max_retries + 1):
+                collected: list[str] = []
                 try:
                     in_thought = False
 

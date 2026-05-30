@@ -297,10 +297,17 @@ class ExecutorAgent:
 
             text, tool_calls = await self._client.chat("tools", messages, tools=tool_schemas)
 
-            if text and not tool_calls:
-                yield text
-
             if not tool_calls:
+                # Model is done calling tools — stream a full answer via "chat" to avoid the
+                # num_predict:256 cap enforced by the tools role.
+                if tool_calls_made > 0:
+                    async for chunk in self._client.complete("chat", messages):
+                        if cancel_event and cancel_event.is_set():
+                            yield "\n\n[Interrupted]"
+                            return
+                        yield chunk
+                elif text:
+                    yield text
                 return
 
             if tool_calls_made >= MAX_TOOL_CALLS:
@@ -535,10 +542,17 @@ class ExecutorAgent:
 
             text, tool_calls = await self._client.chat("tools", messages, tools=tool_schemas)
 
-            if text and not tool_calls:
-                yield text
-
             if not tool_calls:
+                # Model is done calling tools — stream a full answer via "chat" to avoid the
+                # num_predict:256 cap enforced by the tools role.
+                if tool_calls_made > 0:
+                    async for chunk in self._client.complete("chat", messages):
+                        if cancel_event and cancel_event.is_set():
+                            yield "\n\n[Interrupted]"
+                            return
+                        yield chunk
+                elif text:
+                    yield text
                 return
 
             if tool_calls_made >= MAX_TOOL_CALLS:

@@ -13,6 +13,7 @@ from collections import deque
 from datetime import datetime
 
 from app.core.config import ConfigManager
+from app.core.utils import strip_internal_tags
 from app.memory.manager import append_to_memory
 from app.services import proactive_prefs as _prefs
 
@@ -402,7 +403,7 @@ class ProactiveEngine:
             "timestamp": datetime.now().isoformat(),
         })
         try:
-            append_to_memory(role="W.A.D.E.", text=text)
+            append_to_memory(role="W.A.D.E.", text=strip_internal_tags(text))
         except Exception as e:
             logger.warning("[PROACTIVE] Failed to persist message: %s", e)
 

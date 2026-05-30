@@ -117,9 +117,8 @@ class OllamaManager:
             return
         logger.info("[OLLAMA] Pulling model '%s'...", model)
         print(f"📥 Pulling {model} (this may take several minutes — large models can be 5+ GB)...", flush=True)
-        proc = await asyncio.create_subprocess_exec("ollama", "pull", model)
-        returncode = await proc.wait()
-        if returncode != 0:
+        result = await asyncio.to_thread(subprocess.run, ["ollama", "pull", model])
+        if result.returncode != 0:
             raise RuntimeError(
                 f"Failed to pull model '{model}'. Check your internet connection and try: ollama pull {model}"
             )
@@ -128,13 +127,14 @@ class OllamaManager:
     async def model_exists(self, model: str) -> bool:
         """Return True if the model is listed in 'ollama list'."""
         try:
-            proc = await asyncio.create_subprocess_exec(
-                "ollama", "list",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.DEVNULL,
+            result = await asyncio.to_thread(
+                subprocess.run,
+                ["ollama", "list"],
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
-            stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=10)
-            return model in stdout.decode()
+            return model in result.stdout
         except Exception:
             return False
 
