@@ -8,43 +8,30 @@ import subprocess
 from pathlib import Path
 
 from app.core.config import PID_FILE, ConfigManager
+from app.skills.registry import register_tool
 from app.skills.sdk import wade_tool
 from app.core.hardware import probe_hardware, system_environment
 
 logger = logging.getLogger("wade_agent_runtime")
 
-@wade_tool(
-    name="check_hardware_stats",
-    description="Returns a full hardware health report: CPU, RAM, GPU VRAM, device temperatures, and OS info.",
-    risk="low",
-    category="system",
-    cacheable=True,
-    cache_ttl=15,
-    instructions=(
-        "Run this when the user asks to check hardware, run diagnostics, inspect system health, "
-        "or review specs. Also use alongside check_wade_services_health for a full system check."
-    ),
-)
+
+@register_tool("check_hardware_stats")
 async def check_hardware_stats() -> str:
     """Returns a detailed report of the physical PC hardware status."""
     report = ["🖥️ PC HARDWARE HEALTH REPORT\n" + "="*40]
-    
     try:
         hw = await asyncio.to_thread(probe_hardware)
     except Exception as e:
         logger.warning(f"Hardware probe error bypassed: {e}")
         hw = {"os": "Unknown", "devices": []}
         report.append(f"⚠️ Hardware probe partially failed (See logs).")
-
     try:
         ctx = await system_environment.get_context()
     except Exception as e:
         logger.warning(f"System environment context error bypassed: {e}")
         ctx = "Unavailable (system environment context error)."
-        
     report.append(f"OS: {hw.get('os', 'Unknown')}")
     report.append(f"Real-time Context: {ctx}")
-    
     report.append("\n[Devices]")
     for dev in hw.get("devices", []):
         name = dev.get("name")
@@ -52,13 +39,12 @@ async def check_hardware_stats() -> str:
         temp = dev.get("meta", {}).get("temperature", "N/A")
         mem_total = dev.get("memory_total_gb", "Unknown")
         mem_free = dev.get("memory_free_gb", "Unknown")
-        
         report.append(f"- {kind}: {name}")
         report.append(f"  VRAM/RAM: {mem_free}GB free / {mem_total}GB total")
         if temp != "N/A":
             report.append(f"  Temp: {temp}°C")
-            
     return "\n".join(report)
+
 
 @wade_tool(
     name="check_active_models",
@@ -74,40 +60,25 @@ async def check_active_models() -> str:
     try:
         config = ConfigManager.get()
         models = config.get("roles", {}).get("mapping", {})
-        
         if not models:
             return "No specific models mapped in configuration. Using system defaults."
-            
         report = ["🧠 ACTIVE AI MODELS\n" + "="*40]
         for role, model in models.items():
             report.append(f"- {role.title()}: {model}")
-            
         return "\n".join(report)
     except Exception as e:
         return f"Error retrieving active models: {e}"
 
-@wade_tool(
-    name="check_wade_services_health",
-    description="Checks W.A.D.E.'s internal service health: gateway daemon, WhatsApp bridge, browser service, and privilege status.",
-    risk="low",
-    category="system",
-    cacheable=True,
-    cache_ttl=15,
-    instructions=(
-        "Run this when the user asks about W.A.D.E.'s status, service health, what's online/offline, "
-        "or as part of a full system diagnostic alongside check_hardware_stats."
-    ),
-)
+
+@register_tool("check_wade_services_health")
 async def check_wade_services_health() -> str:
     """Checks the pulse of W.A.D.E.'s core internal components."""
     def _run_checks():
         report = ["🏥 W.A.D.E. INTERNAL SYSTEM HEALTH REPORT\n" + "="*40]
-        
         gateway_status = "🔴 OFFLINE"
         if PID_FILE.exists():
             gateway_status = f"🟢 ONLINE (PID: {PID_FILE.read_text().strip()})"
         report.append(f"Gateway Daemon: {gateway_status}")
-        
         bridge_status = "🔴 OFFLINE"
         bridge_running = False
         for proc in psutil.process_iter(['name', 'cmdline']):
@@ -119,21 +90,17 @@ async def check_wade_services_health() -> str:
                         break
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                 pass
-                
         if bridge_running:
             bridge_status = "🟢 ONLINE"
         report.append(f"WhatsApp Bridge: {bridge_status}")
-
         import socket
         def check_port(port):
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 return s.connect_ex(('localhost', port)) == 0
-
         headless_port = check_port(9223)
         headed_port = check_port(9222)
         report.append(f"Browser Service (Headless:9223): {'🟢 ONLINE' if headless_port else '🔴 OFFLINE'}")
         report.append(f"Browser Service (Headed:9222):   {'🟢 ONLINE' if headed_port else '🔴 OFFLINE'}")
-        
         try:
             import ctypes
             is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
@@ -142,33 +109,11 @@ async def check_wade_services_health() -> str:
             logger.debug(f"Admin privilege check failed (non-critical, assuming active): {e}")
             admin_status = "🟢 ACTIVE"
         report.append(f"God Mode (Elevated Privileges): {admin_status}")
-
         return "\n".join(report)
-
     return await asyncio.to_thread(_run_checks)
 
-@wade_tool(
-    name="perform_system_recovery",
-    description="Executes a targeted self-healing action to recover a W.A.D.E. service component.",
-    risk="medium",
-    category="system",
-    reversible=False,
-    parameters={
-        "action": {
-            "type": "string",
-            "description": (
-                "The recovery action to perform. Valid values: "
-                "'restart_whatsapp_bridge', 'restart_browser_service', "
-                "'provision_browser_service', 'restart_gateway', 'clear_stale_pid'."
-            ),
-        }
-    },
-    required_params=["action"],
-    instructions=(
-        "Only call this when a specific service is confirmed offline or broken via check_wade_services_health. "
-        "Always run check_wade_services_health first to confirm the issue before invoking recovery."
-    ),
-)
+
+@register_tool("perform_system_recovery")
 async def perform_system_recovery(action: str) -> str:
     """Executes sandboxed self-healing actions."""
     def _recover():
@@ -187,7 +132,6 @@ async def perform_system_recovery(action: str) -> str:
                                 killed_count += 1
                     except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                         pass
-
                 try:
                     env = os.environ.copy()
                     node_cmd = ["node", "whatsapp-bridge.js"]
@@ -242,8 +186,11 @@ async def perform_system_recovery(action: str) -> str:
                 except Exception as e:
                     return f"❌ Failed to provision browser binaries: {e}"
 
-            return f"❌ Unknown recovery action '{action}'. Valid actions: restart_whatsapp_bridge, restart_browser_service, provision_browser_service, restart_gateway, clear_stale_pid."
-
+            return (
+                f"❌ Unknown recovery action '{action}'. Valid actions: "
+                "restart_whatsapp_bridge, restart_browser_service, provision_browser_service, "
+                "restart_gateway, clear_stale_pid."
+            )
         except Exception as e:
             logger.error("[DIAGNOSTICS] perform_system_recovery unexpected error: %s", e)
             return f"❌ Recovery action failed unexpectedly: {e}"

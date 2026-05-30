@@ -6,7 +6,7 @@ risk: high
 parameters:
   action:
     type: string
-    enum: [restart_whatsapp_bridge, clear_stale_pid, restart_gateway, provision_browser_service]
+    enum: [restart_whatsapp_bridge, restart_browser_service, clear_stale_pid, restart_gateway, provision_browser_service]
     description: The recovery protocol to execute.
 required: [action]
 ---
@@ -17,6 +17,7 @@ required: [action]
 - **Verify First**: Always run `check_wade_services_health` before attempting a recovery.
 - **Protocols**:
     - `restart_whatsapp_bridge`: Kills all existing Node.js bridge processes and spawns a fresh instance.
+    - `restart_browser_service`: Restarts the `wade_sandbox_browser` Docker container. Allow 10–15 seconds for CDP ports 9222 and 9223 to become available.
     - `clear_stale_pid`: Removes the `.wade/gateway.pid` file. Use this if the system thinks it's already running but isn't.
     - `provision_browser_service`: Installs the Playwright Chromium binaries required for browser-based skills.
 - **Gateway Limitation**: You **cannot** restart the main Gateway (`restart_gateway`) from within the tool; you must ask the user to do this via the CLI.
