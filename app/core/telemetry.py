@@ -215,6 +215,17 @@ class TelemetryStore:
                 ),
             )
 
+    def prune_old(self, max_age_days: int = 30) -> int:
+        """Delete rows older than max_age_days from all telemetry tables."""
+        from datetime import timedelta
+        cutoff = (datetime.now() - timedelta(days=max_age_days)).isoformat()
+        total = 0
+        with sqlite3.connect(self._db_path) as conn:
+            for table in ("tool_traces", "critic_verdicts", "inference_metrics", "audit_logs"):
+                cur = conn.execute(f"DELETE FROM {table} WHERE created_at < ?", (cutoff,))
+                total += cur.rowcount
+        return total
+
     def get_audit_logs(self, limit: int = 50) -> list[dict[str, Any]]:
         with sqlite3.connect(self._db_path) as conn:
             conn.row_factory = sqlite3.Row

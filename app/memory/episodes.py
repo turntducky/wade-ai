@@ -124,6 +124,25 @@ class EpisodeStore:
             if cur.rowcount == 0:
                 raise KeyError(f"No episode with id={episode_id!r}")
 
+    def prune_old(self, max_age_days: int = 30, monitor_age_days: int = 7) -> int:
+        """Delete old episodes. monitor_event rows expire faster; daily_summary rows are retained longer."""
+        from datetime import timedelta
+        cutoff_general = (datetime.now() - timedelta(days=max_age_days)).isoformat()
+        cutoff_monitor = (datetime.now() - timedelta(days=monitor_age_days)).isoformat()
+        with sqlite3.connect(self._db_path) as conn:
+            cur_mon = conn.execute(
+                "DELETE FROM episodes WHERE type = 'monitor_event' AND timestamp < ?",
+                (cutoff_monitor,),
+            )
+            cur_gen = conn.execute(
+                "DELETE FROM episodes WHERE type != 'monitor_event' "
+                "AND json_extract(tags, '$') NOT LIKE '%daily_summary%' "
+                "AND timestamp < ?",
+                (cutoff_general,),
+            )
+            deleted = cur_mon.rowcount + cur_gen.rowcount
+        return deleted
+
     def delete_matching(self, query: str, limit: int = 20) -> int:
         """Delete episodes whose content contains any significant word from query.
         Returns count of episodes deleted."""

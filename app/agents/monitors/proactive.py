@@ -84,11 +84,12 @@ class ProactiveMonitor(MonitorDaemon):
         await proactive_engine.run()
 
     def get_extra_status(self) -> dict:
-        from app.services.proactive import COOLDOWN_MINUTES, IDLE_CHECK_MINUTES, MAX_PER_HOUR
+        from app.services.proactive import COOLDOWN_MINUTES, IDLE_CHECK_MINUTES, MAX_PER_HOUR, SYS_ALERT_COOLDOWN_MINUTES
         return {
-            "cooldown_minutes":   COOLDOWN_MINUTES,
-            "idle_check_minutes": IDLE_CHECK_MINUTES,
-            "max_per_hour":       MAX_PER_HOUR,
+            "cooldown_minutes":          COOLDOWN_MINUTES,
+            "idle_check_minutes":        IDLE_CHECK_MINUTES,
+            "max_per_hour":              MAX_PER_HOUR,
+            "sys_alert_cooldown_minutes": SYS_ALERT_COOLDOWN_MINUTES,
         }
 
 proactive_monitor = ProactiveMonitor.__new__(ProactiveMonitor)

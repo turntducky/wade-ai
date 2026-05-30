@@ -139,6 +139,19 @@ class TaskStore:
             ).fetchall()
         return [_row_to_task(r) for r in rows]
 
+    def prune_old(self, max_age_days: int = 30) -> int:
+        """Delete terminal tasks older than max_age_days. Active tasks are never deleted."""
+        from datetime import timedelta
+        cutoff = (datetime.now() - timedelta(days=max_age_days)).isoformat()
+        terminal = tuple(_TERMINAL_STATUSES)
+        placeholders = ",".join("?" * len(terminal))
+        with sqlite3.connect(self._db_path) as conn:
+            cur = conn.execute(
+                f"DELETE FROM tasks WHERE status IN ({placeholders}) AND created_at < ?",
+                (*[s.value for s in terminal], cutoff),
+            )
+        return cur.rowcount
+
     def list_recent(self, limit: int = 50) -> list[Task]:
         """Return the most recently created tasks, newest first. Excludes internal sentinels."""
         with sqlite3.connect(self._db_path) as conn:

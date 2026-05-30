@@ -128,7 +128,7 @@ class SystemMonitor(MonitorDaemon):
                 payload={
                     "alerts": alerts,
                     "cpu": cpu, "ram": ram, "disk": disk,
-                    "top_processes": self._get_top_processes(),
+                    "top_processes": top_procs,
                     "is_trend": False,
                 },
                 source="monitor:system",

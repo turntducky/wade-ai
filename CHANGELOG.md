@@ -6,6 +6,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and
 
 ---
 
+## [0.2.1] — 2026-05-30
+
+### Fixed
+
+- **Proactive alert feedback loop** (`app/services/proactive.py`): The urgent system-alert path in `_evaluate_and_act()` had no rate limiting — when RAM exceeded the 90% threshold it triggered a full LLM inference call every 60 seconds unconditionally, creating a self-sustaining CPU/thermal loop. Added `SYS_ALERT_COOLDOWN_MINUTES = 15` and a `_last_sys_alert` timestamp so alerts fire at most once per 15-minute window, matching the cooldown already applied to the routine proactive path.
+- **Double process scan on threshold breach** (`app/agents/monitors/system.py`): `_get_top_processes()` was called twice per threshold event (once to populate `_current_vitals`, once again when building the event payload). Now reuses the already-computed result.
+
+### Added
+
+- **Nightly DB pruning** to prevent unbounded SQLite growth:
+  - `EpisodeStore.prune_old()` (`app/memory/episodes.py`): deletes `monitor_event` rows older than 7 days and all other non-`daily_summary` rows older than 30 days.
+  - `TaskStore.prune_old()` (`app/core/task_store.py`): deletes completed/failed/cancelled tasks older than 30 days.
+  - `TelemetryStore.prune_old()` (`app/core/telemetry.py`): deletes rows from `tool_traces`, `critic_verdicts`, `inference_metrics`, and `audit_logs` older than 30 days.
+  - All three are called from `MemoryAgent.prune_old_memories()` (`app/agents/memory_agent.py`), which already runs nightly at 00:05 via the `__nightly_consolidation__` job.
+
+---
+
 ## [0.2.0-beta] — 2026-05-26
 
 ### Added — Core Runtime (`app/core/runtime/`)

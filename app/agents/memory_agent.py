@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 
@@ -107,18 +108,49 @@ class MemoryAgent:
             logger.debug("[MEMORY_AGENT] Extracted %d facts.", len(facts))
 
     async def prune_old_memories(self, max_age_days: int = 90) -> None:
-        """Prune stale episodic memories from the vector store. Called from nightly consolidation."""
+        """Prune stale episodic memories from the vector store and all SQLite stores."""
         from app.memory.semantic_memory import SemanticMemoryStream
         from app.core.personality import CHROMA_DB_DIR
+        from app.core.config import TASKS_DB_PATH
+        from app.core.task_store import TaskStore
+        from app.core.telemetry import TelemetryStore, TELEMETRY_DB_PATH
+
         try:
             import chromadb
             client = chromadb.PersistentClient(path=str(CHROMA_DB_DIR))
             stream = SemanticMemoryStream(client)
             deleted = stream.prune_old_episodes(max_age_days=max_age_days)
             if deleted:
-                logger.info("[MEMORY_AGENT] Pruned %d old episodes.", deleted)
+                logger.info("[MEMORY_AGENT] Pruned %d old vector episodes.", deleted)
         except Exception as e:
-            logger.warning("[MEMORY_AGENT] Pruning failed: %s", e)
+            logger.warning("[MEMORY_AGENT] Vector pruning failed: %s", e)
+
+        try:
+            deleted = await asyncio.to_thread(
+                self._episode_store.prune_old, max_age_days
+            )
+            if deleted:
+                logger.info("[MEMORY_AGENT] Pruned %d old SQLite episodes.", deleted)
+        except Exception as e:
+            logger.warning("[MEMORY_AGENT] Episode SQLite pruning failed: %s", e)
+
+        try:
+            deleted = await asyncio.to_thread(
+                TaskStore(TASKS_DB_PATH).prune_old, max_age_days
+            )
+            if deleted:
+                logger.info("[MEMORY_AGENT] Pruned %d old tasks.", deleted)
+        except Exception as e:
+            logger.warning("[MEMORY_AGENT] Task pruning failed: %s", e)
+
+        try:
+            deleted = await asyncio.to_thread(
+                TelemetryStore(TELEMETRY_DB_PATH).prune_old, max_age_days
+            )
+            if deleted:
+                logger.info("[MEMORY_AGENT] Pruned %d old telemetry rows.", deleted)
+        except Exception as e:
+            logger.warning("[MEMORY_AGENT] Telemetry pruning failed: %s", e)
 
     async def consolidate_today(self) -> None:
         """Consolidate today's episodes into durable facts with a nightly summary."""

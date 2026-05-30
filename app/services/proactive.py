@@ -21,9 +21,10 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("wade.proactive")
 
-COOLDOWN_MINUTES   = 15
-IDLE_CHECK_MINUTES = 20
-MAX_PER_HOUR       = 4
+COOLDOWN_MINUTES      = 15
+IDLE_CHECK_MINUTES    = 20
+MAX_PER_HOUR          = 4
+SYS_ALERT_COOLDOWN_MINUTES = 15
 
 # ── Intent detection ──────────────────────────────────────────────────────────
 
@@ -154,6 +155,7 @@ class ProactiveEngine:
         # Feedback tracking: last broadcast id → topic
         self._last_message_id:   str | None = None
         self._last_message_topic: str | None = None
+        self._last_sys_alert:    datetime | None = None
 
     # ── Wiring ────────────────────────────────────────────────────────────────
 
@@ -308,7 +310,12 @@ class ProactiveEngine:
         # but also inline here if the proactive loop catches a live spike)
         if state["cpu"] > cpu_t or state["ram"] > ram_t:
             topic = "system_alert"
-            if topic not in _prefs.get_suppressed():
+            now = datetime.now()
+            sys_alert_elapsed = (
+                (now - self._last_sys_alert).total_seconds() / 60
+                if self._last_sys_alert else float("inf")
+            )
+            if topic not in _prefs.get_suppressed() and sys_alert_elapsed >= SYS_ALERT_COOLDOWN_MINUTES:
                 urgent_prompt = (
                     f"System load: CPU {state['cpu']:.1f}%, RAM {state['ram']:.1f}%. "
                     f"Thresholds: CPU {cpu_t}%, RAM {ram_t}%. Priority: URGENT. "
@@ -317,6 +324,7 @@ class ProactiveEngine:
                 text = await self._generate(urgent_prompt)
                 if text:
                     await self._broadcast(text, topic=topic)
+                    self._last_sys_alert = now
             return
 
         if not self._can_send_routine():
