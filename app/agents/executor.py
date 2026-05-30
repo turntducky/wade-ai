@@ -28,6 +28,8 @@ def _get_skill_router() -> SkillRouter:
         _skill_router = SkillRouter(_personality.chroma_client)
     return _skill_router
 
+logger = logging.getLogger("wade.executor")
+
 ALWAYS_ON_TOOLS: frozenset[str] = frozenset(["hot_reload_system", "check_wade_services_health"])
 MAX_TOOL_POOL: int = 14
 WORKSPACE_CAP: int = 10
@@ -50,8 +52,6 @@ def _get_intent_classifier():
             inference_client=client,
         )
     return _intent_classifier
-
-logger = logging.getLogger("wade.executor")
 
 MAX_TOOL_CALLS = 10
 CONTEXT_BUDGET_CHARS = 120_000
@@ -99,7 +99,11 @@ def _get_tools_for_task(goal: str, tier_ctx=None) -> tuple[list[dict], str]:
     classifier = _get_intent_classifier()
 
     # Stage 1: Category pool — all tools whose category matches detected intent
-    categories = asyncio.run(classifier.classify(goal))
+    try:
+        categories = asyncio.run(classifier.classify(goal))
+    except Exception as exc:
+        logger.warning("[EXECUTOR] IntentClassifier failed, falling back to empty category pool: %s", exc)
+        categories = []
     pool: set[str] = set(get_tools_by_categories(categories))
 
     # Workspace cap: if workspace tools exceed WORKSPACE_CAP, trim by semantic similarity
