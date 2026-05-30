@@ -28,6 +28,29 @@ def _get_skill_router() -> SkillRouter:
         _skill_router = SkillRouter(_personality.chroma_client)
     return _skill_router
 
+ALWAYS_ON_TOOLS: frozenset[str] = frozenset(["hot_reload_system", "check_wade_services_health"])
+MAX_TOOL_POOL: int = 14
+WORKSPACE_CAP: int = 10
+
+_intent_classifier = None
+
+def _get_intent_classifier():
+    global _intent_classifier
+    if _intent_classifier is None:
+        from app.services.model_router import ModelRouter
+        from app.services.inference_client import InferenceClient
+        from app.core.config import ConfigManager
+        from app.core.intent_classifier import IntentClassifier
+        config = ConfigManager.get()
+        roles = config.get("roles", {}).get("mapping", {})
+        router = ModelRouter(roles)
+        client = InferenceClient(router=router)
+        _intent_classifier = IntentClassifier(
+            chroma_client=_personality.chroma_client,
+            inference_client=client,
+        )
+    return _intent_classifier
+
 logger = logging.getLogger("wade.executor")
 
 MAX_TOOL_CALLS = 10
@@ -65,31 +88,55 @@ def _parse_history_to_messages(memory_ctx: str) -> list[dict]:
     return msgs
 
 def _get_tools_for_task(goal: str, tier_ctx=None) -> tuple[list[dict], str]:
-    """Determine relevant tools for the given task goal, applying tier-based restrictions, and construct the tool-context string for the system prompt."""
+    """4-stage category-aware tool selection pipeline."""
     load_all_skills()
     all_schemas, _ = get_dynamic_tools()
 
-    from app.skills.registry import TOOL_INVENTORY
-    from app.skills.registry import get_tool_descriptions
+    from app.skills.registry import TOOL_INVENTORY, get_tool_descriptions, get_tools_by_categories
 
     router = _get_skill_router()
     router.index_tools()
-    relevant_names = router.get_relevant_tools(goal)
+    classifier = _get_intent_classifier()
 
-    combined_names = list(set(relevant_names))
+    # Stage 1: Category pool — all tools whose category matches detected intent
+    categories = asyncio.run(classifier.classify(goal))
+    pool: set[str] = set(get_tools_by_categories(categories))
 
+    # Workspace cap: if workspace tools exceed WORKSPACE_CAP, trim by semantic similarity
+    if "workspace" in categories:
+        ws_tools = [
+            n for n in pool
+            if TOOL_INVENTORY.get(n, {}).get("manifest") and
+            TOOL_INVENTORY[n]["manifest"].category == "workspace"
+        ]
+        if len(ws_tools) > WORKSPACE_CAP:
+            top_ws = router.rank_tools_by_relevance(goal, ws_tools)[:WORKSPACE_CAP]
+            pool = (pool - set(ws_tools)) | set(top_ws)
+
+    # Stage 2: Always-on tools
+    pool.update(t for t in ALWAYS_ON_TOOLS if t in TOOL_INVENTORY)
+
+    # Stage 3: Cross-category semantic fill — top 4 from outside the current pool
+    fill = router.get_relevant_tools(goal, n_results=4, exclude=pool)
+    pool.update(fill)
+
+    # Stage 4: Hard cap
+    combined = list(pool)
+    if len(combined) > MAX_TOOL_POOL:
+        combined = router.rank_tools_by_relevance(goal, combined)[:MAX_TOOL_POOL]
+
+    # Tier filtering (preserved from original)
     if tier_ctx is not None and tier_ctx.is_restricted:
         allowed = tier_ctx.allowed_tool_categories
-        combined_names = [
-            name for name in combined_names
+        combined = [
+            name for name in combined
             if TOOL_INVENTORY.get(name, {}).get("manifest")
             and TOOL_INVENTORY[name]["manifest"].category in allowed
         ]
-
     if tier_ctx is not None:
         _tier = tier_ctx.tier
-        combined_names = [
-            name for name in combined_names
+        combined = [
+            name for name in combined
             if not (
                 TOOL_INVENTORY.get(name, {}).get("manifest") and
                 TOOL_INVENTORY[name]["manifest"].allowed_tiers and
@@ -97,15 +144,15 @@ def _get_tools_for_task(goal: str, tier_ctx=None) -> tuple[list[dict], str]:
             )
         ]
 
-    if not combined_names:
+    if not combined:
         return [], ""
 
-    filtered_schemas = [s for s in all_schemas if s["function"]["name"] in combined_names]
+    filtered_schemas = [s for s in all_schemas if s["function"]["name"] in set(combined)]
 
     all_descriptions = {t["name"]: t for t in get_tool_descriptions()}
     tool_lines: list[str] = []
     instruction_blocks: list[str] = []
-    for name in relevant_names:
+    for name in combined:
         if name not in all_descriptions:
             continue
         t = all_descriptions[name]
@@ -118,10 +165,14 @@ def _get_tools_for_task(goal: str, tier_ctx=None) -> tuple[list[dict], str]:
         return filtered_schemas, ""
 
     parts = [
-        "<available_tools_summary>",
-        "You have the following tools available that might be relevant to this request:",
+        "<available_tools>",
+        "You have the following tools available for this request:",
         "\n".join(tool_lines),
-        "</available_tools_summary>",
+        "",
+        "IMPORTANT: You may ONLY call tools listed above. "
+        "Do not invent or guess tool names — if a needed tool is not listed, "
+        "say so and ask the user to clarify.",
+        "</available_tools>",
     ]
     if instruction_blocks:
         parts += [
