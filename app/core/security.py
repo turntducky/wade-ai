@@ -11,12 +11,11 @@ def get_tier_context(
     request: Request,
     device_id: str | None = Depends(get_device_id),
 ) -> TierContext:
-    """Determine the requester's tier context based on device ID or client IP. Device ID takes precedence if provided."""
-    if device_id:
-        ctx = user_registry.resolve_device(device_id)
-        if ctx is not None:
-            return ctx
+    """Determine the requester's tier context based on client IP or device ID.
 
+    Localhost always resolves to admin — device ID registration is for remote
+    users only and must never downgrade a local machine to a non-admin tier.
+    """
     client_host = (request.client.host if request.client else "") or ""
     forwarded_for = request.headers.get("X-Forwarded-For", "")
     is_direct_localhost = (
@@ -25,6 +24,11 @@ def get_tier_context(
     )
     if is_direct_localhost:
         return TierContext.admin()
+
+    if device_id:
+        ctx = user_registry.resolve_device(device_id)
+        if ctx is not None:
+            return ctx
 
     return TierContext.for_tier("strangers")
 

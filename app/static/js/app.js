@@ -850,7 +850,11 @@ async function _hitlDecide(approved) {
             body:    JSON.stringify({ approved }),
         });
 
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) {
+            let detail = `HTTP ${res.status}`;
+            try { const d = await res.json(); if (d.detail) detail = d.detail; } catch (_) {}
+            throw new Error(detail);
+        }
 
         actionsEl.classList.add('hidden');
         statusEl.textContent  = approved ? '✓ Authorization granted.' : '✗ Action rejected.';
