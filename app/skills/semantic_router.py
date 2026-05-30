@@ -51,8 +51,14 @@ class SkillRouter:
         if not self.collection or not query.strip():
             return []
         try:
-            # Fetch extra results to account for exclusions
+            # Fetch extra results to account for exclusions, but never exceed collection size
             fetch_n = n_results + len(exclude) if exclude else n_results
+            try:
+                collection_count = int(self.collection.count())
+                if collection_count > 0:
+                    fetch_n = min(fetch_n, collection_count)
+            except (TypeError, ValueError):
+                pass
             results = self.collection.query(query_texts=[query], n_results=fetch_n)
             ids = results.get("ids", [[]])[0]
             distances = results.get("distances", [[]])[0]
