@@ -76,9 +76,9 @@ class IntentClassifier:
                         ids=[f"{category}_{i}" for i in range(len(anchors))],
                         documents=anchors,
                     )
+                self._collections[category] = coll
             except Exception as exc:
                 logger.warning("[INTENT] Could not seed anchors for %s: %s", category, exc)
-            self._collections[category] = coll
 
     def _compute_category_scores(self, user_prompt: str) -> dict[str, float]:
         scores: dict[str, float] = {}
@@ -130,6 +130,8 @@ class IntentClassifier:
             async for chunk in self._inference_client.complete("fast", messages):
                 full_text += chunk
             data = json.loads(full_text.strip())
+            if not isinstance(data, list):
+                return []
             valid_cats = set(_ANCHOR_QUERIES.keys())
             return [cat for cat in data if cat in valid_cats]
         except Exception as exc:
