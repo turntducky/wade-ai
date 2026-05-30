@@ -446,9 +446,14 @@ class ProactiveEngine:
             return
         self._boot_done = True
 
+        # Skip boot announcement if user is already interacting
+        if self._user_last_active is not None:
+            logger.info("[PROACTIVE] User already active on boot — skipping boot sequence.")
+            return
+
         if hasattr(self, "_task_store") and self._task_store:
             if self._task_store.list_active():
-                logger.info("[PROACTIVE] User already active on boot. Skipping boot message.")
+                logger.info("[PROACTIVE] Active tasks found on boot — skipping boot message.")
                 return
 
         bucket = _time_bucket()
@@ -464,22 +469,6 @@ class ProactiveEngine:
             await self._broadcast(intro, topic=_time_bucket())
             self._last_sent   = datetime.now()
             self._sent_count += 1
-
-        bootstrap_file = Path.home() / ".wade" / "workspace" / "BOOTSTRAP.md"
-        if bootstrap_file.exists():
-            await asyncio.sleep(2)
-            onboard_prompt = (
-                "This is your very first session with this user. "
-                "Send a brief, warm but professional Jarvis-style message: "
-                "let them know you'd like to ask a few quick questions to get "
-                "properly acquainted before you get to work. "
-                "One or two sentences. Conversational, not robotic."
-            )
-            onboard_msg = await self._generate(onboard_prompt)
-            if onboard_msg:
-                await self._broadcast(onboard_msg, topic="onboarding")
-                self._last_sent   = datetime.now()
-                self._sent_count += 1
 
 
 proactive_engine = ProactiveEngine()

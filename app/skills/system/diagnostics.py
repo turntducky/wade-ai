@@ -8,12 +8,23 @@ import subprocess
 from pathlib import Path
 
 from app.core.config import PID_FILE, ConfigManager
-from app.skills.registry import register_tool
+from app.skills.sdk import wade_tool
 from app.core.hardware import probe_hardware, system_environment
 
 logger = logging.getLogger("wade_agent_runtime")
 
-@register_tool("check_hardware_stats")
+@wade_tool(
+    name="check_hardware_stats",
+    description="Returns a full hardware health report: CPU, RAM, GPU VRAM, device temperatures, and OS info.",
+    risk="low",
+    category="system",
+    cacheable=True,
+    cache_ttl=15,
+    instructions=(
+        "Run this when the user asks to check hardware, run diagnostics, inspect system health, "
+        "or review specs. Also use alongside check_wade_services_health for a full system check."
+    ),
+)
 async def check_hardware_stats() -> str:
     """Returns a detailed report of the physical PC hardware status."""
     report = ["🖥️ PC HARDWARE HEALTH REPORT\n" + "="*40]
@@ -49,7 +60,15 @@ async def check_hardware_stats() -> str:
             
     return "\n".join(report)
 
-@register_tool("check_active_models")
+@wade_tool(
+    name="check_active_models",
+    description="Returns the currently active AI models and their role assignments (chat, reasoner, tools, etc.).",
+    risk="low",
+    category="system",
+    cacheable=True,
+    cache_ttl=60,
+    instructions="Use when the user asks which models are loaded, what AI engine is active, or about model configuration.",
+)
 async def check_active_models() -> str:
     """Returns the currently active Ollama models."""
     try:
@@ -67,7 +86,18 @@ async def check_active_models() -> str:
     except Exception as e:
         return f"Error retrieving active models: {e}"
 
-@register_tool("check_wade_services_health")
+@wade_tool(
+    name="check_wade_services_health",
+    description="Checks W.A.D.E.'s internal service health: gateway daemon, WhatsApp bridge, browser service, and privilege status.",
+    risk="low",
+    category="system",
+    cacheable=True,
+    cache_ttl=15,
+    instructions=(
+        "Run this when the user asks about W.A.D.E.'s status, service health, what's online/offline, "
+        "or as part of a full system diagnostic alongside check_hardware_stats."
+    ),
+)
 async def check_wade_services_health() -> str:
     """Checks the pulse of W.A.D.E.'s core internal components."""
     def _run_checks():
@@ -117,7 +147,28 @@ async def check_wade_services_health() -> str:
 
     return await asyncio.to_thread(_run_checks)
 
-@register_tool("perform_system_recovery")
+@wade_tool(
+    name="perform_system_recovery",
+    description="Executes a targeted self-healing action to recover a W.A.D.E. service component.",
+    risk="medium",
+    category="system",
+    reversible=False,
+    parameters={
+        "action": {
+            "type": "string",
+            "description": (
+                "The recovery action to perform. Valid values: "
+                "'restart_whatsapp_bridge', 'restart_browser_service', "
+                "'provision_browser_service', 'restart_gateway', 'clear_stale_pid'."
+            ),
+        }
+    },
+    required_params=["action"],
+    instructions=(
+        "Only call this when a specific service is confirmed offline or broken via check_wade_services_health. "
+        "Always run check_wade_services_health first to confirm the issue before invoking recovery."
+    ),
+)
 async def perform_system_recovery(action: str) -> str:
     """Executes sandboxed self-healing actions."""
     def _recover():
